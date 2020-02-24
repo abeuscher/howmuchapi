@@ -16,19 +16,21 @@ services:
       MONGO_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
   appclient:
     build: 
-      context: ./client
+      context: ./appclient
     container_name: 'appclient'
     restart: 'always'
     hostname: howmuch.local
     ports:
-      - "3000:3000"
+      - "80:80"
+      - "443:443"
+    volumes: 
+      - ./appclient/public_html:/usr/local/apache2/htdocs/       
     depends_on:
-      - 'appserver'
+      - appserver  
+    links:
+      - "appserver:appserver"
     networks:
-      - beuschernet    
-    volumes:
-      - ./client/:/usr/app
-      - /usr/app/node_modules            
+      - beuschernet      
   appserver:
     build: 
       context: ./server
@@ -54,8 +56,8 @@ services:
       ME_CONFIG_MONGODB_SERVER: mongodb
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
-      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
+      ME_CONFIG_BASICAUTH_USERNAME: ""
+      ME_CONFIG_BASICAUTH_PASSWORD: ""
     depends_on:
       - mongodb    
     networks:
