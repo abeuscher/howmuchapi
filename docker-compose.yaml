@@ -1,10 +1,38 @@
 version: "3"
 
 services:
-  apiserver:
+  mongodb:
+    image: 'mongo:latest'
+    container_name: 'mongodb'
+    volumes:
+      - 'mongodata:/data/db'
+    networks:
+      - beuschernet
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_ROOT_DATABASE}
+      MONGO_INITDB_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
+      MONGO_INITDB_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
+      MONGO_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+  appclient:
     build: 
-      context: ./
-    container_name: 'apiserver'
+      context: ./client
+    container_name: 'appclient'
+    restart: 'always'
+    hostname: howmuch.local
+    ports:
+      - "3000:3000"
+    depends_on:
+      - 'appserver'
+    networks:
+      - beuschernet    
+    volumes:
+      - ./client/:/usr/app
+      - /usr/app/node_modules            
+  appserver:
+    build: 
+      context: ./server
+    container_name: 'appserver'
     restart: 'always'
     hostname: howmuch.localapi
     ports:
@@ -14,20 +42,7 @@ services:
     links:
       - "mongodb:mongodb"
     networks:
-      - beuschernet          
-  mongodb:
-    image: 'mongo:latest'
-    container_name: 'mongodb'
-    volumes:
-      - './data:/data/db'
-    networks:
-      - beuschernet
-    environment:
-      MONGO_INITDB_DATABASE: ${MONGO_INITDB_ROOT_DATABASE}
-      MONGO_INITDB_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
-      MONGO_INITDB_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
-      MONGO_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      - beuschernet        
   mongoexpress:
     image: mongo-express
     container_name: mongo-express
@@ -45,5 +60,9 @@ services:
       - mongodb    
     networks:
       - beuschernet
+    links:
+      - "mongodb:mongodb"
 networks:
   beuschernet:
+volumes:
+  mongodata:
