@@ -44,7 +44,9 @@ services:
     links:
       - "mongodb:mongodb"
     networks:
-      - beuschernet        
+      - beuschernet     
+    volumes:
+      - ./appserver/dist:/usr/src/app/dist   
   mongoexpress:
     image: mongo-express
     container_name: mongo-express
