@@ -1,0 +1,23 @@
+//Basic Styles
+body {
+  font-family: $body-font;
+  background: $body-bg-color;
+  color: $body-text-color;
+  position: relative;
+}
+a {
+  text-decoration: none;
+  color: $body-link-color;
+  &:hover {
+    color: $body-link-hover-color;
+  }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: $header-font;
+}
