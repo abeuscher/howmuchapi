@@ -8,7 +8,6 @@
       "start": "node server.js"
     },
     "dependencies": {
-
       "babelify":"10.0.0",
       "babel-plugin-transform-react-pug":"7.0.1",
       "@babel/core":"7.8.4",
@@ -32,8 +31,6 @@
       "pugify": "^2.2.0",
       "react":"16.12.0",
       "react-dom":"16.12.0",
-      "smoothscroll-polyfill": "^0.4.3",
-      "uglifyify": "^5.0.2",
-      "youtube-player": "^5.5.0"
+      "uglifyify": "^5.0.2"
     }
   }

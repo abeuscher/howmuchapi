@@ -33,7 +33,7 @@ services:
       - beuschernet      
   appserver:
     build: 
-      context: ./server
+      context: ./appserver
     container_name: 'appserver'
     restart: 'always'
     hostname: howmuch.localapi
