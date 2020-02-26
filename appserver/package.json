@@ -1,17 +1,17 @@
 {
-  "name": "docker_web_app",
+  "name": "howmuchapiserver",
   "version": "1.0.0",
-  "description": "Node.js on Docker",
-  "author": "First Last <first.last@example.com>",
-  "main": "server.js",
+  "description": "Learning Mongo and Node",
+  "author": "Al Beuscher <alexbeuscher@gmail.com>",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "node launch-app.js"
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "body-parser": "^1.19.0",
     "express": "^4.16.1",
     "file-system": "^2.2.2",
-    "mongodb": "3.5.3",
-    "cors":"2.8.5"
+    "mongoose": "5.9.2",
+    "cors": "2.8.5"
   }
 }

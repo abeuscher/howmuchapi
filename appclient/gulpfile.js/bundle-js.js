@@ -42,12 +42,12 @@ function bundleFile(f) {
   console.log("Begin processing JS file " + f.name);
   browserify({
     entries: f.srcDir + f.srcFileName,
-    debug: false
+    debug: true
   })
     .transform('babelify', {
       presets: ["@babel/preset-env", "@babel/preset-react"], plugins: [require("babel-plugin-transform-react-pug")]
     })
-    .transform("uglifyify", { global: true })
+    //.transform("uglifyify", { global: true })
     .bundle()
     .on('error', function (err) {
       console.log("ERROR ON:" + f.name + "\nERROR:", err.stack);
@@ -58,7 +58,7 @@ function bundleFile(f) {
         .createWriteStream(f.buildDir + f.buildFileName)
         .on("close", function () {
           console.log("Finished Processing JS File " + f.name);
-          minifyJS(f);
+          //minifyJS(f);
         })
     );
 }

@@ -9,27 +9,28 @@ class SList extends React.Component {
           };
     }
     componentDidMount() {
-        console.log("loaded");
         fetch("http://localhost:5000/", { method : "get"})
             .then((data) => {
                 setTimeout(() => null, 0);
                 if(!data.ok) {
                     console.log("ERROR");
                 }
-                else {
-                    console.log("got response", data);
-                }
                 try {
-                     return data.text();
+                     return data.json();
                 }
                 catch(e) {
-                    console.log(e);
+                    console.log("ERROR: ",e);
                 }
                
             })
             .then((data) => {
+                let output = "";
+                console.log(data);
+                data.forEach((item)=> {
+                    output += item.name + ",";
+                });
                 this.setState({
-                    message: data,
+                    message: output,
                   });
             });
     }

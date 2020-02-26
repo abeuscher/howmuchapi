@@ -1,0 +1,11 @@
+{
+  "name": "howmuch_server",
+  "version": "1.0.0",
+  "description": "Learning how to make an API in Node",
+  "author": "Al Beuscher <alexbeuscher@gmail.com>",
+  "main": "server.js",
+  "scripts": {
+    "startclient": "gulp --cwd appclient",
+    "startserver": "gulp --cwd appserver"
+  }
+}
