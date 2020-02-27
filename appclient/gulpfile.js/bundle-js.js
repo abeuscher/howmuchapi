@@ -45,7 +45,7 @@ function bundleFile(f) {
     debug: true
   })
     .transform('babelify', {
-      presets: ["@babel/preset-env", "@babel/preset-react"], plugins: [require("babel-plugin-transform-react-pug")]
+      presets: ["@babel/preset-env", "@babel/preset-react"], plugins: [require("babel-plugin-transform-react-pug"),require("@babel/plugin-proposal-class-properties")]
     })
     //.transform("uglifyify", { global: true })
     .bundle()

@@ -3,23 +3,34 @@ const React = require('react');
 const TextInput = require("./text-input.js");
 const DateInput = require("./date-input.js");
 const imageInput = require("./image-input.js");
+const ImageUploader = require("./image-uploader")
 const blankEntry = require("../../../../data-types.js")().productEntry;
-
+delete blankEntry.created;
 class WeedForm extends React.Component {
     constructor(props) {
         super(props);
         this.state = {};
         //Grab schema from data types and remove values. Not sure if this is the right approach but it;s the right direction.
-        for (let prop in blankEntry) {
-            if (Object.prototype.hasOwnProperty.call(blankEntry, prop)) {
-                try {
-                    this.state[prop] = new blankEntry[prop];
+        this.state = parseSchema(blankEntry);
+        console.log(this.state);
+        function parseSchema(obj) {
+            let output = {};
+            for (let prop in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, prop)) {
+                    if (typeof obj[prop] === 'object') {
+                        output[prop] = parseSchema(obj[prop]);
+                    }
+                    else {
+                        try {
+                            output[prop] = new obj[prop];
+                        }
+                        catch (e) {
+                            output[prop] = "";
+                        }
+                    }
                 }
-                catch (e) {
-                    this.state[prop] = "";
-                }
-
             }
+            return output;
         }
         this.submit = this.submit.bind(this);
         this.handleChange = this.handleChange.bind(this);
@@ -68,6 +79,7 @@ class WeedForm extends React.Component {
     form(onSubmit=this.submit,method="post")
         TextInput(id="thc",placeholder="thc%",label="THC %",handleChange=this.handleChange,value=this.state.THC)
         DateInput(value=this.state.purchase_date,label="Purchase Date",id="purchase_date",selected=this.state.purchase_date,onChange=this.changeDate)
+        ImageUploader
         button(type="submit") Send Form
 `
     }
