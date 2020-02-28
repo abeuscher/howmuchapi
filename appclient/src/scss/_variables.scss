@@ -16,7 +16,7 @@ $sea-green:#2c7873;
 $light-green:#6fb98f;
 $yellow:#ffd800;
 
-$body-bg-color:$white;
+$body-bg-color:linear-gradient(to bottom, rgb(114, 172, 143) 0%, rgb(171, 202, 153) 63%, rgb(216, 219, 166) 83%, rgb(240, 228, 172) 100%);
 
 $body-text-color:$off-black;
 $body-link-color:$black;

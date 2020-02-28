@@ -3,7 +3,9 @@ const CONNECTION_URL = "mongodb://mongodb/local";
 const Entry = require("../schemas/entry.js");
 const Dispensary = require("../schemas/dispensary.js");
 
-function CreateRecord(req,res) {
+function CreateRecord(request,response) {
+    
+    /*
     mongoose.connect(CONNECTION_URL, function (err) {
 
         if (err) throw err;
@@ -11,6 +13,7 @@ function CreateRecord(req,res) {
         res.json(req.body);
 
     });
+    */
 }
 
 module.exports = CreateRecord;

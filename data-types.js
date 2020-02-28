@@ -29,9 +29,9 @@ function HowMuchDataTypes() {
             package_date: Date,
             simple_score: Number,
             full_scores: {
-                "strength": Number,
-                "taste": Number,
-                "appearance": Number,
+                strength: Number,
+                taste: Number,
+                appearance: Number,
             },
             created: {
                 type: Date,

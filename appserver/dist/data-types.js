@@ -2,8 +2,14 @@ function HowMuchDataTypes() {
     return {
         "dispensary": {
             images: [{
+                fieldname: String,
+                originalname: String,
+                encoding: String,
+                mimetype: String,
+                destination: String,
+                filename: String,
                 path: String,
-                caption: String
+                size: Number
             }],
             address: {
                 "street": String,
@@ -19,8 +25,14 @@ function HowMuchDataTypes() {
         },
         "productEntry": {
             images: [{
+                fieldname: String,
+                originalname: String,
+                encoding: String,
+                mimetype: String,
+                destination: String,
+                filename: String,
                 path: String,
-                caption: String
+                size: Number
             }],
             thc: Number,
             weight: Number,
@@ -28,11 +40,9 @@ function HowMuchDataTypes() {
             purchase_date: Date,
             package_date: Date,
             simple_score: Number,
-            full_scores: {
-                "strength": Number,
-                "taste": Number,
-                "appearance": Number,
-            },
+            strength: Number,
+            taste: Number,
+            appearance: Number,
             created: {
                 type: Date,
                 default: Date.now

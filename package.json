@@ -1,11 +1,12 @@
 {
-  "name": "howmuch_server",
+  "name": "howmuch.app",
   "version": "1.0.0",
   "description": "Learning how to make an API in Node",
   "author": "Al Beuscher <alexbeuscher@gmail.com>",
-  "main": "server.js",
+  "main": "dist/index.js",
   "scripts": {
-    "startclient": "gulp --cwd appclient",
-    "startserver": "gulp --cwd appserver"
+    "startclient": "gulp --cwd ./appclient",
+    "resetserver": "docker-compose restart",
+    "startapp": "docker-compose up -d && yarn startclient"
   }
 }
