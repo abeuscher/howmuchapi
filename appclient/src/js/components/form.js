@@ -8,32 +8,29 @@ import ImageUploader from "./form-fields/image-uploader"
 import transformSchema from '../transforms/transform-schema.js'
 import transformEntry from '../transforms/transform-entry.js'
 import transformState from '../transforms/transform-state.js'
-import { faWindowRestore } from '@fortawesome/free-solid-svg-icons'
-
-const blankEntry = require("../../../../data-types.js")().productEntry;
-const apiPaths = {
-    createImage: "http://localhost:5000/create/image",
-    createEntry: "http://localhost:5000/create/entry",
-    updateEntry: "http://localhost:5000/update/entry",
-    getEntry: "http://localhost:5000/get/entry",
-    deleteEntry: "http://localhost:5000/delete/entry"
-};
-
-delete blankEntry.created;
 
 export default class WeedForm extends Component {
     constructor(props) {
         super(props);
-        this.state = { uploading: false, images: [] };
+        this.state = {
+            uploading: false, images: [], paths: {
+                createImage: "http://localhost:5000/create/image",
+                create: "http://localhost:5000/create/" + this.props.type,
+                read: "http://localhost:5000/get/" + this.props.type,
+                update: "http://localhost:5000/update/" + this.props.type,
+                delete: "http://localhost:5000/delete/" + this.props.type
+            },
+            blankEntry: require("../../../../data-types.js")()[this.props.type]
+        };
+        delete this.state.blankEntry.created;
+        this.state = Object.assign({}, this.state, transformSchema(this.state.blankEntry));
         if (this.props.id) {
             this.getEntry(this.props.id);
         }
-        this.state = Object.assign({},this.state,transformSchema(blankEntry));
-        this.getLocalState();
     }
     getLocalState = () => {
         if (window.localStorage.getItem("weedstate")) {
-            this.state = Object.assign({},this.state,JSON.parse(window.localStorage.getItem("weedstate")));
+            this.state = Object.assign({}, this.state, JSON.parse(window.localStorage.getItem("weedstate")));
         }
     }
 
@@ -47,7 +44,7 @@ export default class WeedForm extends Component {
         e.preventDefault();
         var self = this;
         let sendData = transformState(this.state);
-        fetch(apiPaths.updateEntry, {
+        fetch(this.state.paths.update, {
             method: 'POST',
             headers: new Headers({
                 'Content-Type': 'application/json'
@@ -65,7 +62,7 @@ export default class WeedForm extends Component {
 
     deleteEntry = e => {
         let sendData = JSON.stringify({ "id": this.state.id });
-        fetch(apiPaths.deleteEntry, {
+        fetch(this.state.paths.delete, {
             method: 'Post',
             headers: new Headers({
                 'Content-Type': 'application/json'
@@ -81,7 +78,7 @@ export default class WeedForm extends Component {
     getEntry = id => {
         var self = this;
         let sendData = JSON.stringify({ "_id": id.toString() });
-        fetch(apiPaths.getEntry, {
+        fetch(this.state.paths.get, {
             method: 'POST',
             headers: new Headers({
                 'Content-Type': 'application/json'
@@ -93,7 +90,7 @@ export default class WeedForm extends Component {
                 let newState = transformEntry(self.state, res);
                 newState.id = id;
                 newState.edit = true;
-                self.setState(Object.assign({},newState,this.state));
+                self.setState(Object.assign({}, newState, this.state));
             });
     }
 
@@ -109,7 +106,7 @@ export default class WeedForm extends Component {
             formData.append("file", file)
         })
 
-        fetch(apiPaths.createImage, {
+        fetch(this.state.paths.createImage, {
             method: 'POST',
             body: formData
         })
@@ -128,7 +125,7 @@ export default class WeedForm extends Component {
         var sendData = transformState(this.state);
 
         var self = this;
-        var req = fetch(apiPaths.createEntry, {
+        var req = fetch(this.state.paths.create, {
             "method": "post",
             headers: new Headers({
                 'Content-Type': 'application/json'
@@ -164,39 +161,43 @@ export default class WeedForm extends Component {
         let formState = {}, self = this;
         let typeMap = {
             Date: {
-                el: (obj,key) => { return pug`
+                el: (obj, key) => {
+                    return pug`
                     .col-half
                         DateInput(value=self.state[key].value,label=key,id=key,selected=self.state[key].value,onChange=(date) => self.changeDate(date,key))` },
                 validator: {}
             },
-            Number:{
-                el: (obj,key) => { return pug`
+            Number: {
+                el: (obj, key) => {
+                    return pug`
                     .col-half
                         TextInput(id=key,placeholder=key,label=key,handleChange=self.handleChange,value=self.state[key].value)` },
                 validator: {}
             },
-            String:{
-                el: (obj,key) => { return pug`
+            String: {
+                el: (obj, key) => {
+                    return pug`
                     .col-half
                         TextInput(id=key,placeholder=key,label=key,handleChange=self.handleChange,value=self.state[key].value)`},
                 validator: {}
             },
-            Images:{
-                el:(obj,key) => { return pug`
+            Images: {
+                el: (obj, key) => {
+                    return pug`
                     .col-full
                         ImageUploader(uploading=self.state.uploading,onChange=self.onImageUploaderChange, images=self.state.images, removeImage=self.removeImage)`},
                 validator: {}
             }
         }
         Object.keys(this.state).map(key => {
-            if (this.state[key].type!=undefined) {
-                formState[key] = Object.assign({},{formControl:typeMap[this.state[key].type]}, this.state[key])
+            if (this.state[key].type != undefined) {
+                formState[key] = Object.assign({}, { formControl: typeMap[this.state[key].type] }, this.state[key])
             }
-            else if (key=="images") {
-                formState[key] = Object.assign({},{formControl:typeMap["Images"]}, this.state[key])
+            else if (key == "images") {
+                formState[key] = Object.assign({}, { formControl: typeMap["Images"] }, this.state[key])
             }
         });
-        formState = Object.assign({},this.state,formState);
+        formState = Object.assign({}, this.state, formState);
         return pug`
     form(onSubmit=this.submit,method="post")
         .form-row

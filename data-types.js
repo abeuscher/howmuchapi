@@ -11,19 +11,17 @@ function HowMuchDataTypes() {
                 path: String,
                 size: Number
             }],
-            address: {
-                "street": String,
-                "city": String,
-                "state": String,
-                "country": String,
-                "google_maps_link": String
-            },
+            "street": String,
+            "city": String,
+            "state": String,
+            "country": String,
+            "google_maps_link": String,
             created: {
                 type: Date,
                 default: Date.now
             }
         },
-        "productEntry": {
+        "flower": {
             images: [{
                 fieldname: String,
                 originalname: String,

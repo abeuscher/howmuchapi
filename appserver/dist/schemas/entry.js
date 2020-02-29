@@ -1,5 +1,5 @@
 var mongoose = require('mongoose');
-var dType = require("../data-types.js")().productEntry;
+var dType = require("../data-types.js")().flower;
 
 var entrySchema = new mongoose.Schema(dType);
  
