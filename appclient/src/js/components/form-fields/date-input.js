@@ -1,4 +1,4 @@
-const React = require('react');
+import React from 'react';
 import DatePicker from "react-datepicker";
 
 class DateInput extends React.Component {

@@ -1,0 +1,15 @@
+form {
+    label {
+        padding:.25em;
+        text-transform:uppercase;
+        font-weight:300;
+        letter-spacing:1px;
+    }
+    input[type="text"] {
+        padding:.25em;
+    }
+    button, input[type="submit"], input[type="button"] {
+        padding:.25em .5em;
+        margin-right:.5em;
+    }
+}

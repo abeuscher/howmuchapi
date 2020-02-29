@@ -1,50 +1,103 @@
 
 import React, { Component } from 'react'
 
-import TextInput from "./text-input.js"
-import DateInput from "./date-input.js"
-import ImageUploader from "./image-uploader"
+import TextInput from "./form-fields/text-input.js"
+import DateInput from "./form-fields/date-input.js"
+import ImageUploader from "./form-fields/image-uploader"
 
-import Spinner from './image-uploader/spinner'
-import Images from './image-uploader/images'
-import Buttons from './image-uploader/buttons'
+import transformSchema from '../transforms/transform-schema.js'
+import transformEntry from '../transforms/transform-entry.js'
+import transformState from '../transforms/transform-state.js'
+import { faWindowRestore } from '@fortawesome/free-solid-svg-icons'
 
 const blankEntry = require("../../../../data-types.js")().productEntry;
-var apiPaths = {
-    createImage:"http://localhost:5000/create/image",
-    createEntry:"http://localhost:5000/create/entry"
+const apiPaths = {
+    createImage: "http://localhost:5000/create/image",
+    createEntry: "http://localhost:5000/create/entry",
+    updateEntry: "http://localhost:5000/update/entry",
+    getEntry: "http://localhost:5000/get/entry",
+    deleteEntry: "http://localhost:5000/delete/entry"
 };
 
 delete blankEntry.created;
+
 export default class WeedForm extends Component {
     constructor(props) {
         super(props);
-        this.state = {uploading:false};
-        //Grab schema from data types and remove values. Not sure if this is the right approach but it;s the right direction.
-        this.state = parseSchema(blankEntry);
-        function parseSchema(obj) {
-            let output = {};
-            Object.keys(obj).map(function (key) {
-                if (typeof obj[key] === 'object') {
-                    output[key] = key == "images" ? [] : parseSchema(obj[key]);
-                }
-                else if (typeof obj[key] === 'function') {
-                    output[key] = {
-                        value: "",
-                        type: obj[key].name
-                    }
-                }
-            });
-            return output;
+        this.state = { uploading: false, images: [] };
+        if (this.props.id) {
+            this.getEntry(this.props.id);
         }
-
+        this.state = Object.assign({},this.state,transformSchema(blankEntry));
+        this.getLocalState();
     }
+    getLocalState = () => {
+        if (window.localStorage.getItem("weedstate")) {
+            this.state = Object.assign({},this.state,JSON.parse(window.localStorage.getItem("weedstate")));
+        }
+    }
+
     removeImage = path => {
         this.setState({
             images: this.state.images.filter(image => image.path !== path)
         })
     }
-    onUploaderChange = e => {
+
+    updateEntry = e => {
+        e.preventDefault();
+        var self = this;
+        let sendData = transformState(this.state);
+        fetch(apiPaths.updateEntry, {
+            method: 'POST',
+            headers: new Headers({
+                'Content-Type': 'application/json'
+            }),
+            body: JSON.stringify(sendData)
+        })
+            .then(res => res.json())
+            .then(res => {
+                let newState = transformEntry(self.state, res);
+                newState.id = self.state.id;
+                newState.edit = true;
+                self.setState(newState);
+            });
+    }
+
+    deleteEntry = e => {
+        let sendData = JSON.stringify({ "id": this.state.id });
+        fetch(apiPaths.deleteEntry, {
+            method: 'Post',
+            headers: new Headers({
+                'Content-Type': 'application/json'
+            }),
+            body: sendData
+        })
+            .then(res => res.json())
+            .then(res => {
+                console.log(res);
+            });
+    }
+
+    getEntry = id => {
+        var self = this;
+        let sendData = JSON.stringify({ "_id": id.toString() });
+        fetch(apiPaths.getEntry, {
+            method: 'POST',
+            headers: new Headers({
+                'Content-Type': 'application/json'
+            }),
+            body: sendData
+        })
+            .then(res => res.json())
+            .then(res => {
+                let newState = transformEntry(self.state, res);
+                newState.id = id;
+                newState.edit = true;
+                self.setState(Object.assign({},newState,this.state));
+            });
+    }
+
+    onImageUploaderChange = e => {
         const files = Array.from(e.target.files)
 
         this.setState({ uploading: true })
@@ -52,6 +105,7 @@ export default class WeedForm extends Component {
         const formData = new FormData()
 
         files.forEach((file, i) => {
+            console.log(file);
             formData.append("file", file)
         })
 
@@ -61,20 +115,19 @@ export default class WeedForm extends Component {
         })
             .then(res => res.json())
             .then(images => {
+                console.log(images);
                 this.setState({
                     uploading: false,
-                    images : images
+                    images: images
                 })
             })
     }
+
     submit = e => {
         e.preventDefault();
-        var sendData = {};
-        function normalizeForm(obj) {
+        var sendData = transformState(this.state);
 
-        }
-        Object.keys(this.state).map((key,idx) => { sendData[key] = this.state[key].type!=undefined ? this.state[key].value : this.state[key]  })
-        console.log(sendData);
+        var self = this;
         var req = fetch(apiPaths.createEntry, {
             "method": "post",
             headers: new Headers({
@@ -83,10 +136,10 @@ export default class WeedForm extends Component {
             "body": JSON.stringify(sendData)
         });
         req.then(function (data) {
-            return data.text();
+            return data.json();
         })
             .then(function (data) {
-                console.log(data);
+                self.setState({ id: data._id, edit: true });
             });
     }
     handleChange = e => {
@@ -94,7 +147,7 @@ export default class WeedForm extends Component {
         e.preventDefault();
         let newValue = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
         this.setState({
-            [e.target.name] : { value: newValue,type:this.state[e.target.name].type}
+            [e.target.name]: { value: newValue, type: this.state[e.target.name].type }
         });
 
     }
@@ -103,38 +156,61 @@ export default class WeedForm extends Component {
             [label]: { value: newValue, type: this.state[label].type }
         });
     }
+
+
     render() {
-        const { uploading, images } = this.state
-        const uploaderContent = () => {
-          switch(true) {
-            case uploading:
-              return <Spinner />
-            case images.length > 0:
-              return <Images images={this.state.images} removeImage={this.removeImage} />
-            default:
-              return <Buttons onChange={this.onUploaderChange} />
-          }
+        window.localStorage.setItem("weedstate", JSON.stringify(this.state));
+
+        let formState = {}, self = this;
+        let typeMap = {
+            Date: {
+                el: (obj,key) => { return pug`
+                    .col-half
+                        DateInput(value=self.state[key].value,label=key,id=key,selected=self.state[key].value,onChange=(date) => self.changeDate(date,key))` },
+                validator: {}
+            },
+            Number:{
+                el: (obj,key) => { return pug`
+                    .col-half
+                        TextInput(id=key,placeholder=key,label=key,handleChange=self.handleChange,value=self.state[key].value)` },
+                validator: {}
+            },
+            String:{
+                el: (obj,key) => { return pug`
+                    .col-half
+                        TextInput(id=key,placeholder=key,label=key,handleChange=self.handleChange,value=self.state[key].value)`},
+                validator: {}
+            },
+            Images:{
+                el:(obj,key) => { return pug`
+                    .col-full
+                        ImageUploader(uploading=self.state.uploading,onChange=self.onImageUploaderChange, images=self.state.images, removeImage=self.removeImage)`},
+                validator: {}
+            }
         }
+        Object.keys(this.state).map(key => {
+            if (this.state[key].type!=undefined) {
+                formState[key] = Object.assign({},{formControl:typeMap[this.state[key].type]}, this.state[key])
+            }
+            else if (key=="images") {
+                formState[key] = Object.assign({},{formControl:typeMap["Images"]}, this.state[key])
+            }
+        });
+        formState = Object.assign({},this.state,formState);
         return pug`
     form(onSubmit=this.submit,method="post")
         .form-row
-            ImageUploader(onChange=this.props.onUploaderChange, images = this.state.images, removeImage = this.props.removeImage,content=uploaderContent())
-        .form-row
-            .col-half
-                TextInput(id="weight",placeholder="weight (grams)",label="Weight",handleChange=this.handleChange,value=this.state.weight.value)
-            .col-half
-                TextInput(id="price",placeholder="$0.00",label="Price",handleChange=this.handleChange,value=this.state.price.value)
-        .form-row
-            .col-half
-                DateInput(value=this.state.purchase_date.value,label="Purchase Date",id="purchase_date",selected=this.state.purchase_date.value,onChange=(date) => this.changeDate(date,"purchase_date"))
-            .col-half
-                DateInput(value=this.state.package_date.value,label="Package Date",id="package_date",selected=this.state.package_date.value,onChange=(date) => this.changeDate(date,"package_date"))
+            for key in Object.keys(formState)
+                if formState[key]
+                    if formState[key].formControl
+                        =formState[key].formControl.el(formState[key],key)
         .form-row
             .col-full
-                TextInput(id="thc",placeholder="thc%",label="THC %",handleChange=this.handleChange,value=this.state.thc.value)
-        .form-row
-            .col-full
-                button(type="submit") Send Form
+                if this.state.edit
+                    button(onClick=this.updateEntry) Update Record
+                    button(onClick=this.deleteEntry) Delete Record
+                else
+                    button(type="submit") Send Form
 `
     }
 }
