@@ -5,7 +5,10 @@
       flex-direction: column;
       justify-content: space-around;
     }
-    
+    .image-gallery {
+      display:flex;
+      justify-content: space-around;      
+    }
     .buttons {
       display: flex;
       align-items: center;

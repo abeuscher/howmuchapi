@@ -1,11 +1,22 @@
+import React, { Component } from 'react'
+import ReactDOM from 'react-dom';
 
-var React = require('react');
-var ReactDOM = require('react-dom');
+import WeedForm from "./components/form.js";
+import Menu from "./components/menu.js";
 
-const WeedForm = require("./components/form.js");
+const navButtons = [{
+    label:"Manage Collections",
+    
+}];
 
-
-ReactDOM.render(<WeedForm type="flower"/>, document.getElementById('weed-form'));
+class App extends Component {
+    render() {
+        return pug`
+        WeedForm(type="dispensary")
+        `
+    }
+}
+ReactDOM.render(<App/>, document.getElementById('weed-form'));
 
 window.addEventListener("load", function() {
 

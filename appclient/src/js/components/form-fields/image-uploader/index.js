@@ -12,18 +12,17 @@ export default class ImageUploader extends Component {
     const { uploading, images } = this.props
     const uploaderContent = () => {
         switch (true) {
-            case uploading:
-                return <Spinner />
             case images.length > 0:
                 return <Images images={this.props.images} removeImage={this.props.removeImage} />
             default:
-                return <Buttons onChange={this.props.onChange} />
+                return <Spinner />
         }
     }
 
     return pug`
-        .image-uploader
-          .buttons=uploaderContent()
+        .image-uploader(key=this.props.id)
+          .image-gallery=uploaderContent()
+          Buttons(onChange=this.props.onChange)
 `
   }
 }

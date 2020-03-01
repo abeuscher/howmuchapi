@@ -7,8 +7,8 @@ class DateInput extends React.Component {
     }
     render() {
         return pug`
-        label(for=this.props.id)=this.props.label
-        DatePicker(selected=this.props.selected,value=this.props.value,onChange=this.props.onChange)
+        label(key='label-'+this.props.id,for=this.props.id)=this.props.label
+        DatePicker(key='datefield-'+this.props.id,selected=this.props.selected,value=this.props.value,onChange=this.props.onChange)
 `
     }
 }

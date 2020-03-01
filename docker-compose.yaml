@@ -47,7 +47,7 @@ services:
       - beuschernet     
     volumes:
       - ./appserver/dist:/usr/src/app/dist   
-      - ./data-types.js:/usr/src/app/dist/data-types.js   
+      - ./schemas:/usr/src/app/schemas   
       - ./appserver/uploads:/usr/src/app/uploads
   mongoexpress:
     image: mongo-express

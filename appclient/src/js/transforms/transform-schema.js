@@ -1,5 +1,8 @@
 function parseSchema (obj) {
     let output = {};
+    if (obj.created!=undefined) {
+        delete obj.created;
+    }
     Object.keys(obj).map(function (key) {
         if (typeof obj[key] === 'object') {
             output[key] = key == "images" ? [] : parseSchema(obj[key]);
