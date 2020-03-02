@@ -42,11 +42,11 @@ app.listen(5000, () => {
 
     app.post('/get/:type', cors(corsOptions), async (request, response) => {
 
-        let Entry = new models[request.params.type];
+        let Entry = models[request.params.type];
 
         try {
             var result = await Entry.findById(request.body._id).exec();
-            response.send(result);
+            response.send(result ? result : {error:"not found"});
         } catch (error) {
             response.status(500).send(error);
         }

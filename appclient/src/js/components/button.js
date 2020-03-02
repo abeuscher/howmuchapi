@@ -7,7 +7,7 @@ export default class WeedMenu extends Component {
 
     render() {
         return pug`
-            button(onClick=this.props.onClick,className=this.props.className=this.props.label,cb=this.props.cb)
+            button(onClick=this.props.onClick,className=this.props.className,cb=this.props.cb)=this.props.label
         `
     }
 }

@@ -14,14 +14,13 @@ export default class WeedMenu extends Component {
 */
     constructor(props) {
         super(props);
-        this.props.buttons  = [];
     }
 
     render() {
         return pug`
             nav
-                for buttonObj in this.state
-                    Button(this.props=buttonObj)
+                for buttonObj,idx in this.props.buttons
+                    Button(key='mbutt'+idx,label=buttonObj.label,onClick=buttonObj.onClick,cb=buttonObj.cb,classNAme=buttonObj.className)
         `
     }
 
