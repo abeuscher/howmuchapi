@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 
 import Button from './button.js'
+import ButtonRadio from './button-radio.js'
 
 export default class WeedMenu extends Component {
 /*
@@ -20,7 +21,11 @@ export default class WeedMenu extends Component {
         return pug`
             nav
                 for buttonObj,idx in this.props.buttons
-                    Button(key='mbutt'+idx,label=buttonObj.label,onClick=buttonObj.onClick,cb=buttonObj.cb,classNAme=buttonObj.className)
+                    if buttonObj.buttonType=="simple"
+                        Button(key='mbutt'+idx,label=buttonObj.label,onClick=buttonObj.onClick,cb=buttonObj.cb,className=buttonObj.className)
+                    else if buttonObj.buttonType=="type" && buttonObj.options!=undefined
+                        ButtonRadio(key='mbutt'+idx,label=buttonObj.label,onClick=buttonObj.onClick,cb=buttonObj.cb,className=buttonObj.className,options=buttonObj.options,selectedOpt=this.props.selectedType)
+                    
         `
     }
 

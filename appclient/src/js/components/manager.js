@@ -11,7 +11,10 @@ export default class EntryManager extends Component {
     render() {
         return pug`
             .manager
-                .entries(content=this.props.entries)
+                h2 File Manager
+                if this.props.entries
+                    each entry in this.props.entries
+                        a(onClick=this.props.editEntry,data-id=entry._id,href="#")=entry._id
         `
     }
 

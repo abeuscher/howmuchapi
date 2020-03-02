@@ -1,6 +1,12 @@
 function HowMuchDataTypes() {
     return {
         "dispensary": {
+            title: String,
+            street: String,
+            city: String,
+            state: String,
+            country: String,
+            google_maps_link: String,
             images: [{
                 fieldname: String,
                 originalname: String,
@@ -11,27 +17,13 @@ function HowMuchDataTypes() {
                 path: String,
                 size: Number
             }],
-            "street": String,
-            "city": String,
-            "state": String,
-            "country": String,
-            "google_maps_link": String,
             created: {
                 type: Date,
                 default: Date.now
             }
         },
         "flower": {
-            images: [{
-                fieldname: String,
-                originalname: String,
-                encoding: String,
-                mimetype: String,
-                destination: String,
-                filename: String,
-                path: String,
-                size: Number
-            }],
+            title: String,
             strain: String,
             distributor: String,
             thc: Number,
@@ -43,6 +35,16 @@ function HowMuchDataTypes() {
             strength: Number,
             taste: Number,
             appearance: Number,
+            images: [{
+                fieldname: String,
+                originalname: String,
+                encoding: String,
+                mimetype: String,
+                destination: String,
+                filename: String,
+                path: String,
+                size: Number
+            }],
             created: {
                 type: Date,
                 default: Date.now

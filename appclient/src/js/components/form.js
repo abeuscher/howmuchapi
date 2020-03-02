@@ -10,33 +10,25 @@ import transformEntry from '../transforms/transform-entry'
 import transformState from '../transforms/transform-state'
 import { layer } from '@fortawesome/fontawesome-svg-core'
 
-import api from './api-connector'
-
 export default class WeedForm extends Component {
+
     constructor(props) {
         super(props);
 
         //Set default state. TODO: Offload the paths to another file mebbe
         this.state = !this.state ? this.blankEntry : this.state;
-        this.state.api = !this.state.api ? new api(this.state.paths) : this.state.api;
 
         // Set default State with schema and defaults from props. The transform converts data types to objects that hold a value.
         this.state.currentRecord = Object.assign({}, this.state.currentRecord, transformSchema(this.state.blankSchema));
 
         //Check for record saved locally so app can be refreshed and save state. TODO: List this to the app level once menu is added.
-        if (this.props.id) {
-            this.getEntry(this.props.id);
+        if (this.props.recordid) {
+            this.getEntry(this.props.recordid);
         }
 
     }
     blankEntry = {
-        uploading: false, error: "", paths: {
-            createImage: "http://localhost:5000/create/image",
-            create: "http://localhost:5000/create/" + this.props.type,
-            read: "http://localhost:5000/get/" + this.props.type,
-            update: "http://localhost:5000/update/" + this.props.type,
-            delete: "http://localhost:5000/delete/" + this.props.type
-        },
+        uploading: false, error: "", 
         blankSchema: require("../../../../schemas/schemas.js")()[this.props.type],
         currentRecord: {}
     }
@@ -58,7 +50,7 @@ export default class WeedForm extends Component {
 
         // Transform current state into key/value object for update.
         let sendData = JSON.stringify(transformState(this.state.currentRecord));
-        this.state.api.update(sendData)
+        this.props.api.update(sendData)
             .then(res => {
                 let newState = transformEntry(this.state.currentRecord, res);
                 this.setState({ currentRecord: Object.assign({}, newState, this.state.currentRecord) });
@@ -71,7 +63,7 @@ export default class WeedForm extends Component {
     deleteEntry = e => {
 
         // Delete an entry from DB. TODO: This doesn't work.
-        this.state.api.deleteRecord(this.state.currentRecord.id)
+        this.props.api.deleteRecord(this.state.currentRecord.id)
             .then(res => {
                 if (res.ok) {
                     this.writeError("Record Deleted")
@@ -84,22 +76,18 @@ export default class WeedForm extends Component {
     }
 
     getEntry = id => {
-        var self = this;
 
         // Get entry based on id. Currently this can only be passedin via props. That might be right?
-        this.state.api.getById(id)
+        this.props.api.getById(id)
             .then(res => {
                 if (!res.error) {
-                    console.log("record found", res)
-                    let newState = { currentRecord: transformEntry(self.state.currentRecord, res) };
+                    let newState = { currentRecord: transformEntry(this.state.currentRecord, res) };
                     newState.currentRecord.id = id;
                     newState.edit = true;
-                    self.setState(Object.assign({}, this.state, newState));
+                    this.setState(Object.assign({}, this.state, newState));
                 }
                 else {
-                    console.log("record not found");
                     this.setState({ edit: false });
-                    this.wipeLocalStorage();
                     this.state.currentRecord = Object.assign({}, this.state.currentRecord, transformSchema(this.state.blankSchema));
                 }
 
@@ -113,7 +101,7 @@ export default class WeedForm extends Component {
         // Transform state into DB record format then insert.
         var sendData = JSON.stringify(transformState(this.state.currentRecord))
 
-        this.state.api.createRecord(sendData)
+        this.props.api.createRecord(sendData)
             .then(data => {
                 // Set record id and shift to edit mode.
                 this.setState({ edit: true, currentRecord: Object.assign({}, this.state.currentRecord, { id: data._id }) });
@@ -125,7 +113,7 @@ export default class WeedForm extends Component {
         // Set state to uploading. Hard to test in local because of speed.
         this.setState({ uploading: true })
 
-        this.state.api.createImage(e)
+        this.props.api.createImage(e)
             .then(images => {
                 this.setState({
                     uploading: false,
