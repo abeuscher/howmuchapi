@@ -1,75 +1,41 @@
-var defaultFetchObject = {
-    method: 'POST',
-    headers: new Headers({
-        'Content-Type': 'application/json'
-    })
-}
-function apiConnector(path) {
-    return fetch(path, Object.assign({},defaultFetchObject,{body: sendData}))
-        .then(res => res.json())
-}
+function apiConnector(action, data, type) {
 
-apiConnector.prototype.update = function(sendData) {
+    let rootpath = "http://localhost:5000/";
+    let paths = {
+        createImage: rootpath + "create/image",
+        create: rootpath + "create/" + type,
+        read: rootpath + "get/" + type,
+        update: rootpath + "update/" + type,
+        delete: rootpath + "delete/" + type
+    }
 
-}
-apiConnector.prototype.getById = function(id) {
-    let sendData = JSON.stringify({ "_id": id.toString() });
-    return fetch(this.paths.read, {
-        method: 'POST',
-        headers: new Headers({
-            'Content-Type': 'application/json'
-        }),
-        body: sendData
-    })
-        .then(res => res.json())
-}
-apiConnector.prototype.getAll = function() {
-    return fetch(this.paths.read, {
-        method: 'POST',
-        headers: new Headers({
-            'Content-Type': 'application/json'
+    //console.log("API Call: " + paths[action], data, type)
+    if (action == "createImage") {
+
+        // Grab files from field.
+        const files = Array.from(data.target.files)
+
+        const formData = new FormData()
+
+        // Add files to array inside of form object.
+        files.forEach((file) => {
+            formData.append("file", file)
         })
-    })
-        .then(res => res.json())
+        return fetch(paths[action], {
+            method: 'POST',
+            body: formData
+        })
+            .then(res => res.json())
+    }
+    else {
+        return fetch(paths[action], Object.assign({}, {
+            method: 'POST',
+            headers: new Headers({
+                'Content-Type': 'application/json'
+            })
+        }, { body: data }))
+            .then(res => res.json())
+    }
 }
-apiConnector.prototype.createImage = function(e) {
 
-    // Grab files from field.
-    const files = Array.from(e.target.files)
-
-    const formData = new FormData()
-
-    // Add files to array inside of form object.
-    files.forEach((file, i) => {
-        formData.append("file", file)
-    })
-
-    // Upload images to default dir whie record is being edited. TODO: Make server side worker move images after record is added then upadte path. This might mean adding a download path to record.
-    return fetch(this.paths.createImage, {
-        method: 'POST',
-        body: formData
-    })
-        .then(res => res.json())
-}
-apiConnector.prototype.createRecord = function(sendData){
-    return fetch(this.paths.create, {
-        "method": "POST",
-        headers: new Headers({
-            'Content-Type': 'application/json'
-        }),
-        "body": sendData
-    })
-    .then(res => res.json())
-}
-apiConnector.prototype.deleteRecord = function(id) {
-    let sendData = JSON.stringify({ "id": id });
-    return fetch(this.paths.delete, {
-        method: 'POST',
-        headers: new Headers({
-            'Content-Type': 'application/json'
-        }),
-        body: sendData
-    })
-        .then(res => res.json())
-}
-module.exports = apiConnector;
+module.exports=apiConnector

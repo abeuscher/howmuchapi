@@ -13,6 +13,8 @@ import transformSchema from './transforms/transform-schema'
 import assignTypes from './transforms/assign-types'
 import transformState from './transforms/transform-state'
 
+import apiConnector from './components/api-connector'
+
 import Schemas from '../../../schemas/schemas.js'
 
 class App extends Component {
@@ -22,7 +24,7 @@ class App extends Component {
         this.state = Object.assign({}, {
             settings: {
                 mode: "create", // manager, edit, or create
-                type: "dispensary", // dispensary or flower  
+                type: "flower", // dispensary or flower  
                 currentid: null
             },
             msgbox: "",
@@ -43,9 +45,10 @@ class App extends Component {
             label: "Change Type",
             onClick: this.changeType,
             buttonType: "type",
-            options: ["dispensary", "flower"]
+            options: ["flower", "dispensary"]
         }]
     }
+
     formFieldTypes = () => {
         return {
             Date: {
@@ -78,12 +81,15 @@ class App extends Component {
             }
         }
     }
+
     createBlankEntry = () => {
         return assignTypes(Schemas()[this.state.settings.type], {}, this.formFieldTypes)
     }
+
     componentDidMount() {
         this.init();
     }
+
     init = () => {
         switch (this.state.settings.mode) {
             case "manager":
@@ -98,50 +104,11 @@ class App extends Component {
             this.getEntries()
         }
     }
+
     componentDidUpdate() {
         this.setLocalStorage();
-    }
+    }   
 
-    apiConnector = (action, data, type) => {
-
-        let rootpath = "http://localhost:5000/";
-        let paths = {
-            createImage: rootpath + "create/image",
-            create: rootpath + "create/" + type,
-            read: rootpath + "get/" + type,
-            update: rootpath + "update/" + type,
-            delete: rootpath + "delete/" + type
-        }
-
-        //console.log("API Call: " + paths[action], data, type)
-        if (action == "createImage") {
-
-            // Grab files from field.
-            const files = Array.from(data.target.files)
-
-            const formData = new FormData()
-
-            // Add files to array inside of form object.
-            files.forEach((file) => {
-                formData.append("file", file)
-            })
-            return fetch(paths[action], {
-                method: 'POST',
-                body: formData
-            })
-                .then(res => res.json())
-        }
-        else {
-            return fetch(paths[action], Object.assign({}, {
-                method: 'POST',
-                headers: new Headers({
-                    'Content-Type': 'application/json'
-                })
-            }, { body: data }))
-                .then(res => res.json())
-        }
-
-    }
     startManager = () => {
         this.setState({ settings: Object.assign({}, this.state.settings, { mode: "manager", currentid: null }), currentRecord: null }, this.getEntries());
     }
@@ -164,7 +131,6 @@ class App extends Component {
                 }, this.getEntries);     
                 break;           
         }
-
     }
 
     setLocalStorage = () => {
@@ -190,7 +156,7 @@ class App extends Component {
 
         // Transform current state into key/value object for update.
         let sendData = JSON.stringify(Object.assign({},transformState(this.state.currentRecord),{id:this.state.settings.currentid}));
-        this.apiConnector("update", sendData, this.state.settings.type)
+        apiConnector("update", sendData, this.state.settings.type)
             .then(res => {
                 if (res._id) {
                     this.writeError("Entry Updated");
@@ -202,13 +168,14 @@ class App extends Component {
             });
 
     }
+
     createNewEntry = e => {
         e.preventDefault();
 
         // Transform state into DB record format then insert.
         var sendData = JSON.stringify(transformState(this.state.currentRecord))
 
-        this.apiConnector("create", sendData, this.state.settings.type)
+        apiConnector("create", sendData, this.state.settings.type)
             .then(data => {
                 // Set record id and shift to edit mode.
                 this.setState({ 
@@ -221,9 +188,10 @@ class App extends Component {
                         })         
             });
     }
+
     editEntry = id => {
 
-        this.apiConnector("read", JSON.stringify({ "id": id }), this.state.settings.type)
+        apiConnector("read", JSON.stringify({ "id": id }), this.state.settings.type)
             .then(res => {
                 if (!res.error) {
                     this.setState({
@@ -240,6 +208,7 @@ class App extends Component {
             });
         this.setState({ settings: Object.assign({}, this.state.settings, { currentid: id, mode: "edit" }) });
     }
+
     chooseEntry = idx => {
 
         this.setState({
@@ -250,18 +219,20 @@ class App extends Component {
             },
             entries:[],
             currentRecord:assignTypes(Schemas()[this.state.settings.type], this.state.entries[idx], this.formFieldTypes)
-        }, () => { console.log(this.state)})
+        })
     }
+
     getEntries = () => {
-        this.apiConnector("read", "{}", this.state.settings.type)
+        apiConnector("read", "{}", this.state.settings.type)
             .then(res => {
                 this.setState({ entries: res })
             })
     }
+
     deleteEntry = e => {
 
         // Delete an entry from DB. TODO: This doesn't work.
-        this.apiConnector("delete", JSON.stringify({ "id": this.state.settings.currentid }), this.state.settings.type)
+        apiConnector("delete", JSON.stringify({ "id": this.state.settings.currentid }), this.state.settings.type)
             .then(res => {
                 if (res.ok) {
                     this.writeError("Record Deleted")
@@ -269,11 +240,12 @@ class App extends Component {
                 }
             });
     }
+
     onImageUploaderChange = e => {
         this.setState({
             uploading:true
         })
-        this.apiConnector("createImage", e, this.state.settings.type)
+        apiConnector("createImage", e, this.state.settings.type)
             .then((images) => {
                 this.setState({
                     uploading: false,
@@ -281,12 +253,14 @@ class App extends Component {
                 })
             })
     }
+
     removeImage = path => {
         // Remove an image given its path. This may not be a good permanent soluton, May need to assign everything a unique id for DOM.
         this.setState({
             currentRecord: Object.assign({}, this.state.currentRecord, { images: Object.assign({},this.state.currentRecord.images, { value : this.state.currentRecord.images.value.filter(image => image.path !== path)}) })
         })
     }
+
     handleChange = e => {
 
         // Take form field change and add it to state.
@@ -297,6 +271,7 @@ class App extends Component {
         });
 
     }
+
     changeDate(newValue, label) {
         // Process date field change
         this.setState({
@@ -304,13 +279,19 @@ class App extends Component {
 
         });
     }
+
     writeError = msg => {
         this.setState({ error: msg });
         setTimeout(() => { this.setState({ error: "" }) }, 5000);
     }
+
     render() {
         return pug`
-        Menu(key="main-nav-bucket",buttons=this.menuButtons,selectedType=this.state.settings.type)
+        Menu(
+            key="main-nav-bucket",
+            buttons=this.menuButtons,
+            selectedType=this.state.settings.type
+            )
         if this.state.settings.mode=="create" || this.state.settings.mode=="edit"
             WeedForm(
                 key='form-main',
@@ -324,22 +305,12 @@ class App extends Component {
                 id=this.state.settings.currentid
                 )
         if this.state.settings.mode=="manager"
-            Manager(key='manager-main',type=this.state.settings.type,entries=this.state.entries,chooseEntry=this.chooseEntry)`
+            Manager(
+                key='manager-main',
+                type=this.state.settings.type,
+                entries=this.state.entries,
+                chooseEntry=this.chooseEntry
+                )`
     }
 }
 ReactDOM.render(<App key="main-app" />, document.getElementById('weed-form'));
-/*
-CRUD App
- - Delete Not Working
-
-Manager / App Controls
- - UI to allow user to browse and search records
-
-Dispensary Form / Other Drill Down Forms
- - Figure out some way to inject extra info into Data Types for presentation layer where needed
-
-
-
-
-
-*/
