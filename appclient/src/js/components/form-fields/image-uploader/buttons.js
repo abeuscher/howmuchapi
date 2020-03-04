@@ -11,7 +11,6 @@ export default class Buttons extends Component {
       .buttons.fadein
         .button
           label(htmlFor="multi") Add Images
-            FontAwesomeIcon(key="add-image",icon=faImages, color='#6d84b4', size='5x')
           input#multi(type="file",onChange=this.props.onChange, multiple)`
   }
 }

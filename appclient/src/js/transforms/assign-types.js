@@ -8,7 +8,7 @@ function assignTypes(schema, record,formSchema) {
                 output[key] = { value: typeof record[key] === "date" ? new Date(record[key]) : new Date(), type: schema[key].name, formControl: formFields[schema[key].name] }
             }
             else {
-                output[key] = { value: record[key], type: schema[key].name, formControl: formFields[schema[key].name] }
+                output[key] = { value: record[key] || "", type: schema[key].name, formControl: formFields[schema[key].name] }
             }
         }
         else if (key == "images") {

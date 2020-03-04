@@ -1,7 +1,5 @@
 import React, { Component } from 'react'
 
-import { layer } from '@fortawesome/fontawesome-svg-core'
-
 export default class WeedForm extends Component {
 
     constructor(props) {
@@ -35,27 +33,3 @@ export default class WeedForm extends Component {
                         p=this.props.msg`
     }
 }
-module.exports = WeedForm;
-
-/*
-
-getEntry = id => {
-
-    // Get entry based on id. Currently this can only be passedin via props. That might be right?
-    this.props.api("read",JSON.stringify({"id":id}),this.props.type)
-        .then(res => {
-            if (!res.error) {
-                let newState = { currentRecord: transformEntry(this.state.currentRecord, res) };
-                newState.currentRecord.id = id;
-                newState.edit = true;
-                this.setState(Object.assign({}, this.state, newState));
-            }
-            else {
-                this.setState({ edit: false });
-                this.state.currentRecord = Object.assign({}, this.state.currentRecord, transformSchema(this.state.blankSchema));
-            }
-
-        });
-}
-
-*/
