@@ -13,9 +13,14 @@ export default class EntryManager extends Component {
             .manager
                 h2 File Manager
                 if this.props.entries
-                    each entry in this.props.entries
-                        a(onClick=this.props.editEntry,data-id=entry._id,href="#")=entry._id
-        `
+                    each entry,idx in this.props.entries
+                        .entry(key='entry'+idx)
+                            a(onClick=(e) => { this.props.chooseEntry(idx) },href="#")
+                                if entry.images.length>0
+                                    .thumb(style={"backgroundImage":"url('http://localhost:5000/"+entry.images[0].path+"')"})    
+                                if entry.title
+                                    h3=entry.title                                
+                                p=entry._id`
     }
 
 }

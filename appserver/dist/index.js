@@ -43,9 +43,9 @@ app.listen(5000, () => {
     app.post('/get/:type', cors(corsOptions), async (request, response) => {
 
         let Entry = models[request.params.type];
-        if (request.body._id) {
+        if (request.body.id) {
             try {
-                var result = await Entry.findById(request.body._id).exec();
+                var result = await Entry.findById(request.body.id).exec();
                 response.send(result ? result : {error:"not found"});
             } catch (error) {
                 response.status(500).send(error);

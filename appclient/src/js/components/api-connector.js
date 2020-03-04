@@ -1,18 +1,16 @@
-function apiConnector(paths) {
-
-    this.paths = paths;
-
+var defaultFetchObject = {
+    method: 'POST',
+    headers: new Headers({
+        'Content-Type': 'application/json'
+    })
+}
+function apiConnector(path) {
+    return fetch(path, Object.assign({},defaultFetchObject,{body: sendData}))
+        .then(res => res.json())
 }
 
 apiConnector.prototype.update = function(sendData) {
-    return fetch(this.paths.update, {
-        method: 'POST',
-        headers: new Headers({
-            'Content-Type': 'application/json'
-        }),
-        body: sendData
-    })
-        .then(res => res.json())
+
 }
 apiConnector.prototype.getById = function(id) {
     let sendData = JSON.stringify({ "_id": id.toString() });

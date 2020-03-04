@@ -7,13 +7,12 @@ export default class Images extends Component {
     super(props)
   }
   render() {
-    const props = this.props;
-    return this.props.images.map((image, i) => { return pug`
-    .fadeIn(key=i)
-      .delete(key="inner-"+i,onClick=() => { props.removeImage(image.path) })
-        FontAwesomeIcon(key="del-image-"+i,icon=faTimesCircle, size='2x')
-      img(src='http://localhost:5000/'+image.path, alt='')
-  ` })
+    return pug`
+      .image-gallery
+        each image,i in this.props.images
+          .image-bucket(key="image-frame"+i)
+            .delete(key="inner-"+i,onClick=() => { this.props.removeImage(image.path) })
+              FontAwesomeIcon(key="del-image-"+i,icon=faTimesCircle, size='2x')
+            .thumb(style={"backgroundImage":"url(http://localhost:5000/" + image.path + ")"})`
   }
-  
-}
+} 

@@ -7,7 +7,37 @@
     }
     .image-gallery {
       display:flex;
-      justify-content: space-around;      
+      justify-content: space-around;     
+      flex-wrap:wrap;
+      .image-bucket {
+        flex-basis:30%;
+        position:relative;
+        &:after {
+          content:'';
+          display:block;
+          padding-bottom:56.25%;
+        }
+        .delete {
+          position:absolute;
+          top:0;
+          right:0;
+          z-index:1;
+          &:hover {
+            color:white;
+            cursor:pointer;
+          }
+        }
+        .thumb {
+          position:absolute;
+          left:0;
+          top:0;
+          bottom:0;
+          right:0;
+          z-index:0;
+          background-position:center;
+          background-size:cover;
+        }
+      } 
     }
     .buttons {
       display: flex;
@@ -30,11 +60,6 @@
     
     }
     
-    .delete {
-      position: relative;
-      top: 16px;
-      right: 15px
-    }
     
     input[type=file] { 
       visibility: hidden;

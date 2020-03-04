@@ -4,75 +4,178 @@ import ReactDOM from 'react-dom';
 import WeedForm from "./components/form.js";
 import Menu from "./components/menu.js";
 import Manager from "./components/manager.js";
-import api from './components/api-connector'
 
-const apiPaths = type => {
-    return {
-        createImage: "http://localhost:5000/create/image",
-        create: "http://localhost:5000/create/" + type,
-        read: "http://localhost:5000/get/" + type,
-        update: "http://localhost:5000/update/" + type,
-        delete: "http://localhost:5000/delete/" + type
-    }
-}
+import TextInput from "./components/form-fields/text-input"
+import DateInput from "./components/form-fields/date-input"
+import ImageUploader from "./components/form-fields/image-uploader"
+
+import transformSchema from './transforms/transform-schema'
+import assignTypes from './transforms/assign-types'
+import transformState from './transforms/transform-state'
+
+import Schemas from '../../../schemas/schemas.js'
 
 class App extends Component {
 
     constructor(props) {
         super(props);
-        
-        this.state = Object.assign({},{
+        this.state = Object.assign({}, {
             settings: {
                 mode: "create", // manager, edit, or create
                 type: "dispensary", // dispensary or flower  
-                currentId: null,
+                currentid: null
             },
-            menuButtons: [{
-                label: "Manage Entries",
-                onClick: this.startManager,
-                buttonType: "simple"
-            }, {
-                label: "New Entry",
-                onClick: this.startNewEntry,
-                buttonType: "simple"
-            }, {
-                label: "Change Type",
-                onClick: this.changeType,
-                buttonType: "type",
-                options: ["dispensary", "flower"]
-            }]
-        },this.getLocalStorage());
-        this.state.api = new api(apiPaths(this.state.settings.type));
+            msgbox: "",
+            entries: [],
+            currentRecord: {},
+        }, this.getLocalStorage());
+    }
+    menuButtons = () => {
+        return [{
+            label: "Manage Entries",
+            onClick: this.startManager,
+            buttonType: "simple"
+        }, {
+            label: "New Entry",
+            onClick: this.startCreate,
+            buttonType: "simple"
+        }, {
+            label: "Change Type",
+            onClick: this.changeType,
+            buttonType: "type",
+            options: ["dispensary", "flower"]
+        }]
+    }
+    formFieldTypes = () => {
+        return {
+            Date: {
+                el: (obj, key, id, currentRecord=this.state.currentRecord, changeDate=(date) => this.changeDate(date,key)) => {
+                    return pug`DateInput(key=key,value=currentRecord[key].value,label=key,id=key,selected=currentRecord[key].value,onChange=changeDate)`
+                },
+                validator: {},
+                containerClassName: "col-half"
+            },
+            Number: {
+                el: (obj, key, currentRecord=this.state.currentRecord,handleChange=this.handleChange) => {
+                    return pug`TextInput(key=key,id=key,placeholder=key,label=key,handleChange=handleChange,value=currentRecord[key].value)`
+                },
+                validator: {},
+                containerClassName: "col-half"
+            },
+            String: {
+                el: (obj, key, currentRecord=this.state.currentRecord,handleChange=this.handleChange) => {
+                    return pug`TextInput(key=key,id=key,placeholder=key,label=key,handleChange=handleChange,value=currentRecord[key].value)`
+                },
+                validator: {},
+                containerClassName: "col-half"
+            },
+            Images: {
+                el: (obj, key, currentImages = this.state.currentRecord.images.value, onChange = this.onImageUploaderChange, removeImage = this.removeImage,uploading=this.state.uploading) => {
+                    return pug`ImageUploader(key=key,onChange=onChange,images=currentImages,removeImage=removeImage,uploading=uploading)`
+                },
+                validator: {},
+                containerClassName: "col-full"
+            }
+        }
+    }
+    createBlankEntry = () => {
+        return assignTypes(Schemas()[this.state.settings.type], {}, this.formFieldTypes)
+    }
+    componentDidMount() {
+        this.init();
+    }
+    init = () => {
+        switch (this.state.settings.mode) {
+            case "manager":
+                return this.getEntries()
+            case "edit":
+                this.createBlankEntry()
+                return this.editEntry(this.state.settings.currentid)
+            case "create":
+                return this.startCreate()
+        }
+        if (this.state.settings.mode == "manager") {
+            this.getEntries()
+        }
+    }
+    componentDidUpdate() {
+        this.setLocalStorage();
     }
 
-    changeMode = e => {
+    apiConnector = (action, data, type) => {
+
+        let rootpath = "http://localhost:5000/";
+        let paths = {
+            createImage: rootpath + "create/image",
+            create: rootpath + "create/" + type,
+            read: rootpath + "get/" + type,
+            update: rootpath + "update/" + type,
+            delete: rootpath + "delete/" + type
+        }
+
+        //console.log("API Call: " + paths[action], data, type)
+        if (action == "createImage") {
+
+            // Grab files from field.
+            const files = Array.from(data.target.files)
+
+            const formData = new FormData()
+
+            // Add files to array inside of form object.
+            files.forEach((file) => {
+                formData.append("file", file)
+            })
+            return fetch(paths[action], {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+        }
+        else {
+            return fetch(paths[action], Object.assign({}, {
+                method: 'POST',
+                headers: new Headers({
+                    'Content-Type': 'application/json'
+                })
+            }, { body: data }))
+                .then(res => res.json())
+        }
 
     }
-
     startManager = () => {
-        this.setState({ settings: Object.assign({}, this.state.settings, { mode: "manager",currentId:null }) });
-        this.getEntries();
+        this.setState({ settings: Object.assign({}, this.state.settings, { mode: "manager", currentid: null }), currentRecord: null }, this.getEntries());
     }
 
-    startNewEntry = () => {
-        this.setState({ settings: Object.assign({}, this.state.settings, { mode: "create" }) });
+    startCreate = () => {
+        this.setState({ settings: Object.assign({}, this.state.settings, { mode: "create", currentid: null }),
+                        entries: [],
+                        currentRecord:this.createBlankEntry() });
     }
 
     changeType = e => {
-        let newType = e.target.getAttribute("data-value")
-        this.setState({
-            settings: Object.assign({}, this.state.settings, { type: newType }),
-            api: new api(apiPaths(newType))
-        });
+        switch(this.state.settings.mode) {
+            case "create":
+            case "edit":
+                this.setState({ settings: Object.assign({}, this.state.settings, { type: e.target.getAttribute("data-value") })},this.startCreate);
+                break;
+            case "manager":
+                this.setState({
+                    settings: { type: e.target.getAttribute("data-value"), mode:"manager",currentid:null },
+                }, this.getEntries);     
+                break;           
+        }
+
     }
 
     setLocalStorage = () => {
-        window.sessionStorage.setItem("weedstate",JSON.stringify(this.state.settings));
+        if (this.state.settings.currentid) {
+            window.sessionStorage.setItem("weedstate", JSON.stringify(this.state.settings));
+        }  
     }
 
     getLocalStorage = () => {
         if (window.sessionStorage.getItem("weedstate") != undefined) {
-            return {settings:JSON.parse(window.sessionStorage.getItem("weedstate"))};
+            return { settings: JSON.parse(window.sessionStorage.getItem("weedstate")) };
         }
         return {};
     }
@@ -82,37 +185,149 @@ class App extends Component {
         var f = window.sessionStorage.getItem("weedstate");
     }
 
-    editEntry = e => {
+    updateEntry = e => {
         e.preventDefault();
-        this.setState({ settings: Object.assign({}, this.state.settings, { currentId: e.target.getAttribute("data-id"), mode: "create" }) });
+
+        // Transform current state into key/value object for update.
+        let sendData = JSON.stringify(Object.assign({},transformState(this.state.currentRecord),{id:this.state.settings.currentid}));
+        this.apiConnector("update", sendData, this.state.settings.type)
+            .then(res => {
+                if (res._id) {
+                    this.writeError("Entry Updated");
+                }
+                else {
+                    this.writeError("Error on Update");
+                    console.log("Error response:", res);
+                }
+            });
+
     }
+    createNewEntry = e => {
+        e.preventDefault();
 
+        // Transform state into DB record format then insert.
+        var sendData = JSON.stringify(transformState(this.state.currentRecord))
+
+        this.apiConnector("create", sendData, this.state.settings.type)
+            .then(data => {
+                // Set record id and shift to edit mode.
+                this.setState({ 
+                            settings: {
+                                mode:"edit",
+                                type:this.state.settings.type,
+                                currentid: data._id
+                            },
+                            currentRecord: Object.assign({}, this.state.currentRecord, { id: data._id })       
+                        })         
+            });
+    }
+    editEntry = id => {
+
+        this.apiConnector("read", JSON.stringify({ "id": id }), this.state.settings.type)
+            .then(res => {
+                if (!res.error) {
+                    this.setState({
+                        currentRecord: assignTypes(Schemas()[this.state.settings.type], res, this.formFieldTypes),
+                        settings: Object.assign({}, this.state.settings, { currentid: id, mode: "edit" })
+                    });
+                }
+                else {
+                    this.setState({
+                        currentRecord: Object.assign({}, this.state.currentRecord, transformSchema(this.state.blankSchema)),
+                        settings: Object.assign({}, this.state.settings, { mode: "create" })
+                    })
+                }
+            });
+        this.setState({ settings: Object.assign({}, this.state.settings, { currentid: id, mode: "edit" }) });
+    }
+    chooseEntry = idx => {
+
+        this.setState({
+            settings:{
+                mode:"edit",
+                type:this.state.settings.type,
+                currentid:this.state.entries[idx]._id
+            },
+            entries:[],
+            currentRecord:assignTypes(Schemas()[this.state.settings.type], this.state.entries[idx], this.formFieldTypes)
+        }, () => { console.log(this.state)})
+    }
     getEntries = () => {
-
-        this.state.api.getAll()
+        this.apiConnector("read", "{}", this.state.settings.type)
             .then(res => {
                 this.setState({ entries: res })
             })
     }
-    componentDidUpdate() {
-        this.setLocalStorage();
+    deleteEntry = e => {
+
+        // Delete an entry from DB. TODO: This doesn't work.
+        this.apiConnector("delete", JSON.stringify({ "id": this.state.settings.currentid }), this.state.settings.type)
+            .then(res => {
+                if (res.ok) {
+                    this.writeError("Record Deleted")
+                    this.startCreate();
+                }
+            });
+    }
+    onImageUploaderChange = e => {
+        this.setState({
+            uploading:true
+        })
+        this.apiConnector("createImage", e, this.state.settings.type)
+            .then((images) => {
+                this.setState({
+                    uploading: false,
+                    currentRecord: Object.assign({}, this.state.currentRecord, { images: Object.assign({},this.state.currentRecord.images, { value : this.state.currentRecord.images.value.concat(images)}) })
+                })
+            })
+    }
+    removeImage = path => {
+        // Remove an image given its path. This may not be a good permanent soluton, May need to assign everything a unique id for DOM.
+        this.setState({
+            currentRecord: Object.assign({}, this.state.currentRecord, { images: Object.assign({},this.state.currentRecord.images, { value : this.state.currentRecord.images.value.filter(image => image.path !== path)}) })
+        })
+    }
+    handleChange = e => {
+
+        // Take form field change and add it to state.
+        e.preventDefault();
+        let newValue = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+        this.setState({
+            currentRecord: Object.assign({}, this.state.currentRecord, { [e.target.name]: Object.assign({},this.state.currentRecord[e.target.name], { value: newValue }) })
+        });
+
+    }
+    changeDate(newValue, label) {
+        // Process date field change
+        this.setState({
+            currentRecord: Object.assign({}, this.state.currentRecord, { [label]: Object.assign({}, this.state.currentRecord[label], { value: newValue }) })
+
+        });
+    }
+    writeError = msg => {
+        this.setState({ error: msg });
+        setTimeout(() => { this.setState({ error: "" }) }, 5000);
     }
     render() {
         return pug`
-        Menu(buttons=this.state.menuButtons,selectedType=this.state.settings.type)
-        .app-content
-            if this.state.settings.mode=="create"
-                WeedForm(type=this.state.settings.type,api=this.state.api,recordid=this.state.settings.currentId)
-            if this.state.settings.mode=="manager"
-                Manager(type=this.state.settings.type,api=this.state.api,entries=this.state.entries,editEntry=this.editEntry)
-        `
+        Menu(key="main-nav-bucket",buttons=this.menuButtons,selectedType=this.state.settings.type)
+        if this.state.settings.mode=="create" || this.state.settings.mode=="edit"
+            WeedForm(
+                key='form-main',
+                currentRecord=this.state.currentRecord,
+                createEntry=this.createNewEntry,
+                updateEntry=this.updateEntry,
+                deleteEntry=this.deleteEntry,
+                mode=this.state.settings.mode,
+                msg=this.state.msgbox,
+                type=this.state.settings.type,
+                id=this.state.settings.currentid
+                )
+        if this.state.settings.mode=="manager"
+            Manager(key='manager-main',type=this.state.settings.type,entries=this.state.entries,chooseEntry=this.chooseEntry)`
     }
 }
-ReactDOM.render(<App />, document.getElementById('weed-form'));
-
-window.addEventListener("load", function () {
-
-});
+ReactDOM.render(<App key="main-app" />, document.getElementById('weed-form'));
 /*
 CRUD App
  - Delete Not Working
