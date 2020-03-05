@@ -31,7 +31,7 @@ function HowMuchDataTypes() {
             price: Number,
             purchase_date: Date,
             package_date: Date,
-            simple_score: Number,
+            overall_score: Number,
             strength: Number,
             taste: Number,
             appearance: Number,

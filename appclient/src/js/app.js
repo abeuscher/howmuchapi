@@ -25,13 +25,15 @@ class App extends Component {
             settings: {
                 mode: "create", // manager, edit, or create
                 type: "flower", // dispensary or flower  
-                currentid: null
+                currentid: null // active record id
             },
-            msgbox: "",
-            entries: [],
-            currentRecord: {},
-        }, this.getLocalStorage());
+            msgbox: "", // Alert Message at bottom of form. TODO: Make this an object with references to all form fields
+            entries: [], // Entries when in manager mode
+            currentRecord: {}, // Current record when editing
+        }, this.getLocalStorage()); // Merge object with current save state in local storage - just the settings portion of the state.
     }
+
+    // Buttons for App Menu
     menuButtons = () => {
         return [{
             label: "Manage Entries",
@@ -48,26 +50,26 @@ class App extends Component {
             options: ["flower", "dispensary"]
         }]
     }
-
+    // Form field Elements. TODO: This is where to add validation.
     formFieldTypes = () => {
         return {
             Date: {
                 el: (obj, key, id, currentRecord=this.state.currentRecord, changeDate=(date) => this.changeDate(date,key)) => {
-                    return pug`DateInput(key=key,value=currentRecord[key].value,label=key,id=key,selected=currentRecord[key].value,onChange=changeDate)`
+                    return pug`DateInput(key=key,value=currentRecord[key].value,label=key.replace(/_/gi," "),id=key,selected=currentRecord[key].value,onChange=changeDate)`
                 },
                 validator: {},
                 containerClassName: "col-half"
             },
             Number: {
                 el: (obj, key, currentRecord=this.state.currentRecord,handleChange=this.handleChange) => {
-                    return pug`TextInput(key=key,id=key,placeholder=key,label=key,handleChange=handleChange,value=currentRecord[key].value)`
+                    return pug`TextInput(key=key,id=key,label=key.replace(/_/gi," "),handleChange=handleChange,value=currentRecord[key].value)`
                 },
                 validator: {},
                 containerClassName: "col-half"
             },
             String: {
                 el: (obj, key, currentRecord=this.state.currentRecord,handleChange=this.handleChange) => {
-                    return pug`TextInput(key=key,id=key,placeholder=key,label=key,handleChange=handleChange,value=currentRecord[key].value)`
+                    return pug`TextInput(key=key,id=key,label=key.replace(/_/gi," "),handleChange=handleChange,value=currentRecord[key].value)`
                 },
                 validator: {},
                 containerClassName: "col-half"
@@ -87,10 +89,6 @@ class App extends Component {
     }
 
     componentDidMount() {
-        this.init();
-    }
-
-    init = () => {
         switch (this.state.settings.mode) {
             case "manager":
                 return this.getEntries()
@@ -120,6 +118,7 @@ class App extends Component {
     }
 
     changeType = e => {
+        //The logic here is not great. When you switch type the current record is immediately removed with no warning. Need to add an error system or notifications to handle this kind of thing.
         switch(this.state.settings.mode) {
             case "create":
             case "edit":
@@ -134,6 +133,7 @@ class App extends Component {
     }
 
     setLocalStorage = () => {
+        // Only save state if there is currently a record being edited.
         if (this.state.settings.currentid) {
             window.sessionStorage.setItem("weedstate", JSON.stringify(this.state.settings));
         }  
@@ -300,7 +300,7 @@ class App extends Component {
                 updateEntry=this.updateEntry,
                 deleteEntry=this.deleteEntry,
                 mode=this.state.settings.mode,
-                msg=this.state.msgbox,
+                msg=this.state.error,
                 type=this.state.settings.type,
                 id=this.state.settings.currentid
                 )
