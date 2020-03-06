@@ -1,4 +1,4 @@
-function HowMuchDataTypes() {
+function AppSchemas() {
     return {
         "dispensary": {
             title: String,
@@ -23,7 +23,6 @@ function HowMuchDataTypes() {
             }
         },
         "flower": {
-            title: String,
             strain: String,
             distributor: String,
             thc: Number,
@@ -35,6 +34,11 @@ function HowMuchDataTypes() {
             strength: Number,
             taste: Number,
             appearance: Number,
+            scores:{
+                strength: Number,
+                taste: Number,
+                appearance: Number
+            },
             images: [{
                 fieldname: String,
                 originalname: String,
@@ -53,4 +57,4 @@ function HowMuchDataTypes() {
     }
 }
 
-module.exports = HowMuchDataTypes;
+module.exports = AppSchemas;

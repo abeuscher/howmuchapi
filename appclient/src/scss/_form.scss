@@ -7,9 +7,13 @@ form {
     }
     input[type="text"] {
         padding:.25em;
+        width:90%;
     }
     button, input[type="submit"], input[type="button"] {
         padding:.25em .5em;
         margin-right:.5em;
+    }
+    .react-datepicker-wrapper {
+        width:100%;
     }
 }

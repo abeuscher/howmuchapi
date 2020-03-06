@@ -18,8 +18,7 @@ export default class EntryManager extends Component {
                             a(onClick=(e) => { this.props.chooseEntry(idx) },href="#")
                                 if entry.images.length>0
                                     .thumb(style={"backgroundImage":"url('http://localhost:5000/"+entry.images[0].path+"')"})    
-                                if entry.title
-                                    h3=entry.title                                
+                                h3=entry[Object.keys(entry)[1]]                                
                                 p=entry._id`
     }
 

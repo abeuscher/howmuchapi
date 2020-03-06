@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom'
+
+import mongoose from 'mongoose'
 
 import WeedForm from "./components/form.js";
 import Menu from "./components/menu.js";
@@ -9,7 +11,6 @@ import TextInput from "./components/form-fields/text-input"
 import DateInput from "./components/form-fields/date-input"
 import ImageUploader from "./components/form-fields/image-uploader"
 
-import transformSchema from './transforms/transform-schema'
 import assignTypes from './transforms/assign-types'
 import transformState from './transforms/transform-state'
 
@@ -23,7 +24,7 @@ class App extends Component {
         super(props);
         this.state = Object.assign({}, {
             settings: {
-                mode: "create", // manager, edit, or create
+                mode: "manager", // manager, edit, or create
                 type: "flower", // dispensary or flower  
                 currentid: null // active record id
             },
@@ -31,6 +32,13 @@ class App extends Component {
             entries: [], // Entries when in manager mode
             currentRecord: {}, // Current record when editing
         }, this.getLocalStorage()); // Merge object with current save state in local storage - just the settings portion of the state.
+        let schemas = {}, models = {}, s = Schemas()
+        Object.keys(s).map(key => {
+            schemas[key] = new mongoose.Schema(s[key]);
+            models[key] = mongoose.model(key, schemas[key]);
+        });
+        console.log(schemas, models)
+
     }
 
     // Buttons for App Menu
@@ -93,13 +101,9 @@ class App extends Component {
             case "manager":
                 return this.getEntries()
             case "edit":
-                this.createBlankEntry()
                 return this.editEntry(this.state.settings.currentid)
             case "create":
                 return this.startCreate()
-        }
-        if (this.state.settings.mode == "manager") {
-            this.getEntries()
         }
     }
 
@@ -108,7 +112,7 @@ class App extends Component {
     }   
 
     startManager = () => {
-        this.setState({ settings: Object.assign({}, this.state.settings, { mode: "manager", currentid: null }), currentRecord: null }, this.getEntries());
+        this.setState({ settings: Object.assign({}, this.state.settings, { mode: "manager", currentid: null }), currentRecord: null }, this.getEntries);
     }
 
     startCreate = () => {
@@ -200,10 +204,9 @@ class App extends Component {
                     });
                 }
                 else {
-                    this.setState({
-                        currentRecord: Object.assign({}, this.state.currentRecord, transformSchema(this.state.blankSchema)),
-                        settings: Object.assign({}, this.state.settings, { mode: "create" })
-                    })
+                    this.writeError("Record Not Found!")
+                    this.wipeLocalStorage();
+                    this.startCreate()
                 }
             });
         this.setState({ settings: Object.assign({}, this.state.settings, { currentid: id, mode: "edit" }) });
