@@ -20,8 +20,15 @@ export default class WeedForm extends Component {
                     for key in Object.keys(this.props.currentRecord)
                         if this.props.currentRecord[key]
                             if this.props.currentRecord[key].formControl
-                                div(key='form-row-'+counter,className=this.props.currentRecord[key].formControl.containerClassName)=this.props.currentRecord[key].formControl.el(this.props.currentRecord[key],key)
+                                div(key='form-row-'+counter,className=this.props.currentRecord[key].formControl.containerClassName)=this.props.currentRecord[key].formControl.el(this.props.currentRecord,key,false)
                                 - counter++
+                            else if typeof this.props.currentRecord[key]=="object"
+                                .field-group(key="field-group-"+counter)
+                                    h2=key.replace(/_/gi," ")
+                                    for subfield in Object.keys(this.props.currentRecord[key])
+                                        if this.props.currentRecord[key][subfield].formControl
+                                            div(depth="field-group",parent=key,key='form-row-'+counter,className=this.props.currentRecord[key][subfield].formControl.containerClassName)=this.props.currentRecord[key][subfield].formControl.el(this.props.currentRecord[key],subfield,key)
+                                            - counter++
                 .form-row(key="fr-3")
                     .col-full
                         if this.props.mode == "edit"

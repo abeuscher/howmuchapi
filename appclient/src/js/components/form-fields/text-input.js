@@ -7,7 +7,7 @@ class TextInput extends React.Component {
     render() {
         return pug`
         label(for=this.props.id,key='label-'+this.props.id)=this.props.label
-        input(key=this.props.id,type="text",id=this.props.id,name=this.props.id,placeholder=this.props.placeholder,value=this.props.value,onChange=this.props.handleChange)
+        input(key=this.props.id,type="text",id=this.props.id,name=this.props.id,placeholder=this.props.placeholder,value=this.props.value,onChange=this.props.handleChange,data-parent=this.props.parent)
 `
     }
 }

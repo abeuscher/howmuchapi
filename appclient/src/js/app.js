@@ -1,8 +1,6 @@
 import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 
-import mongoose from 'mongoose'
-
 import WeedForm from "./components/form.js";
 import Menu from "./components/menu.js";
 import Manager from "./components/manager.js";
@@ -31,14 +29,9 @@ class App extends Component {
             msgbox: "", // Alert Message at bottom of form. TODO: Make this an object with references to all form fields
             entries: [], // Entries when in manager mode
             currentRecord: {}, // Current record when editing
+            schemas:{},
+            models:{}
         }, this.getLocalStorage()); // Merge object with current save state in local storage - just the settings portion of the state.
-        let schemas = {}, models = {}, s = Schemas()
-        Object.keys(s).map(key => {
-            schemas[key] = new mongoose.Schema(s[key]);
-            models[key] = mongoose.model(key, schemas[key]);
-        });
-        console.log(schemas, models)
-
     }
 
     // Buttons for App Menu
@@ -62,29 +55,29 @@ class App extends Component {
     formFieldTypes = () => {
         return {
             Date: {
-                el: (obj, key, id, currentRecord=this.state.currentRecord, changeDate=(date) => this.changeDate(date,key)) => {
-                    return pug`DateInput(key=key,value=currentRecord[key].value,label=key.replace(/_/gi," "),id=key,selected=currentRecord[key].value,onChange=changeDate)`
+                el: (obj, key, parent, id, changeDate=(date) => this.changeDate(date,key)) => {
+                    return pug`DateInput(key=key,value=obj[key].value,label=key.replace(/_/gi," "),id=key,selected=obj[key].value,onChange=changeDate,parent=parent)`
                 },
                 validator: {},
                 containerClassName: "col-half"
             },
             Number: {
-                el: (obj, key, currentRecord=this.state.currentRecord,handleChange=this.handleChange) => {
-                    return pug`TextInput(key=key,id=key,label=key.replace(/_/gi," "),handleChange=handleChange,value=currentRecord[key].value)`
+                el: (obj, key, parent, handleChange=this.handleChange) => {
+                    return pug`TextInput(key=key,id=key,label=key.replace(/_/gi," "),handleChange=handleChange,value=obj[key].value,parent=parent)`
                 },
                 validator: {},
                 containerClassName: "col-half"
             },
             String: {
-                el: (obj, key, currentRecord=this.state.currentRecord,handleChange=this.handleChange) => {
-                    return pug`TextInput(key=key,id=key,label=key.replace(/_/gi," "),handleChange=handleChange,value=currentRecord[key].value)`
+                el: (obj, key, parent, handleChange=this.handleChange) => {
+                    return pug`TextInput(key=key,id=key,label=key.replace(/_/gi," "),handleChange=handleChange,value=obj[key].value,parent=parent)`
                 },
                 validator: {},
                 containerClassName: "col-half"
             },
             Images: {
-                el: (obj, key, currentImages = this.state.currentRecord.images.value, onChange = this.onImageUploaderChange, removeImage = this.removeImage,uploading=this.state.uploading) => {
-                    return pug`ImageUploader(key=key,onChange=onChange,images=currentImages,removeImage=removeImage,uploading=uploading)`
+                el: (obj, key, parent, currentImages = this.state.currentRecord.images.value, onChange = this.onImageUploaderChange, removeImage = this.removeImage,uploading=this.state.uploading) => {
+                    return pug`ImageUploader(key=key,onChange=onChange,images=currentImages,removeImage=removeImage,uploading=uploading,parent=parent)`
                 },
                 validator: {},
                 containerClassName: "col-full"
@@ -178,9 +171,10 @@ class App extends Component {
 
         // Transform state into DB record format then insert.
         var sendData = JSON.stringify(transformState(this.state.currentRecord))
-
+        console.log(JSON.parse(sendData))
         apiConnector("create", sendData, this.state.settings.type)
             .then(data => {
+
                 // Set record id and shift to edit mode.
                 this.setState({ 
                             settings: {
@@ -202,6 +196,7 @@ class App extends Component {
                         currentRecord: assignTypes(Schemas()[this.state.settings.type], res, this.formFieldTypes),
                         settings: Object.assign({}, this.state.settings, { currentid: id, mode: "edit" })
                     });
+                    console.log(this.state)
                 }
                 else {
                     this.writeError("Record Not Found!")
@@ -265,13 +260,20 @@ class App extends Component {
     }
 
     handleChange = e => {
-
         // Take form field change and add it to state.
         e.preventDefault();
         let newValue = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-        this.setState({
-            currentRecord: Object.assign({}, this.state.currentRecord, { [e.target.name]: Object.assign({},this.state.currentRecord[e.target.name], { value: newValue }) })
-        });
+        if (e.target.getAttribute("data-parent")!="false") {
+            this.setState({
+                currentRecord: Object.assign({}, this.state.currentRecord, { [e.target.getAttribute("data-parent")]: Object.assign({},this.state.currentRecord[e.target.getAttribute("data-parent")], { [e.target.name]: Object.assign({},this.state.currentRecord[e.target.getAttribute("data-parent")][e.target.name], {value:newValue}) }) })
+            });
+        }
+        else {
+            this.setState({
+                currentRecord: Object.assign({}, this.state.currentRecord, { [e.target.name]: Object.assign({},this.state.currentRecord[e.target.name], { value: newValue }) })
+            });
+
+        }
 
     }
 
