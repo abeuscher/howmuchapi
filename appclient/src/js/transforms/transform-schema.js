@@ -1,4 +1,4 @@
-function parseSchema (obj) {
+module.exports = (obj) => {
     let output = {};
     if (obj.created!=undefined) {
         delete obj.created;
@@ -16,4 +16,3 @@ function parseSchema (obj) {
     });
     return output;
 }
-module.exports = parseSchema

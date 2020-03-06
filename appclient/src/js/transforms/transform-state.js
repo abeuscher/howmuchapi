@@ -1,5 +1,3 @@
-let badKeys = ["blankEntry","uploading","paths"];
-
 module.exports = (currentState) => {   
     const transformState = (state) => {
         let output = {};
@@ -11,8 +9,7 @@ module.exports = (currentState) => {
                 output[key] =  transformState(state[key])
             }
         })
-        return output;
-        
+        return output;     
     }
     return transformState(currentState)
 }

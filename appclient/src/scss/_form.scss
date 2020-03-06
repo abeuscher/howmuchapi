@@ -16,4 +16,8 @@ form {
     .react-datepicker-wrapper {
         width:100%;
     }
+    .field-group {
+        flex-basis:100%;
+        display: flex;
+    }
 }

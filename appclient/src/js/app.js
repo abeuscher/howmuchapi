@@ -29,8 +29,6 @@ class App extends Component {
             msgbox: "", // Alert Message at bottom of form. TODO: Make this an object with references to all form fields
             entries: [], // Entries when in manager mode
             currentRecord: {}, // Current record when editing
-            schemas:{},
-            models:{}
         }, this.getLocalStorage()); // Merge object with current save state in local storage - just the settings portion of the state.
     }
 
