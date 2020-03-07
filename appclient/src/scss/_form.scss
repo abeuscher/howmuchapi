@@ -63,6 +63,13 @@ form {
   }
   .react-datepicker-wrapper {
     width: 100%;
+    input[type="text"] {
+      background:transparent;
+      cursor:pointer;
+      &:focus, &:active {
+        outline:none;
+      }
+    }
   }
   .field-group {
     flex-basis: 100%;

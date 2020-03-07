@@ -23,6 +23,26 @@ function AppSchemas() {
                     default: "Map Link"
                 }
             },
+            scores: {
+                layout: {
+                    type: Number,
+                    min:1,
+                    max:10,
+                    default:5
+                },
+                staff: {
+                    type: Number,
+                    min:1,
+                    max:10,
+                    default:5
+                },
+                pricing: {
+                    type: Number,
+                    min:1,
+                    max:10,
+                    default:5
+                }
+            },
             images: [{
                 fieldname: String,
                 originalname: String,
@@ -49,11 +69,15 @@ function AppSchemas() {
             },
             thc: {
                 type: Number,
-                default:15.00
+                default:15.00,
+                min:1.00,
+                max:100.00
             },
             weight: {
                 type: Number,
-                default:3.5
+                default:3.5,
+                min:1,
+                max:114
             },
             price: {
                 type: Number,

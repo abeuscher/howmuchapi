@@ -21,9 +21,10 @@ module.exports = (thisSchema, thisRecord, formSchema) => {
                     output[key] = {
                         value: record[key] ? record[key] : "",
                         type: schema[key].type.name,
-                        label: schema[key].default || "",
-                        min: schema[key].min || -1,
-                        max: schema[key].max || -1,
+                        label: parseFloat(schema[key].default) || 0,
+                        default: parseFloat(schema[key].default) || 0,
+                        min: parseFloat(schema[key].min) || -1,
+                        max: parseFloat(schema[key].max) || -1,
                         formControl: formFields[schema[key].type.name]
                     }
                 }

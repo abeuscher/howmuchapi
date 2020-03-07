@@ -70,7 +70,7 @@ class App extends Component {
                 containerClassName: "col-half"
             },
             Number: {
-                el: (obj, key, parent, handleChange = this.handleChange) => {
+                el: (obj, key, parent, handleChange = this.handleChange, handleCurrencyChange=this.handleCurrencyChange) => {
                     if (obj[key].min >= 0) {
                         return pug`
                             RangeInput(
@@ -83,6 +83,9 @@ class App extends Component {
                                 value=obj[key].value,
                                 parent=parent
                                 )`
+                    }
+                    else if (parseFloat(obj[key].label)%1!=0) {
+                        console.log(key,obj[key].label)
                     }
                     else {
                         return pug`
@@ -350,7 +353,6 @@ class App extends Component {
 
         }
     }
-
     changeDate(newValue, label) {
         // Process date field change
         this.setState({
