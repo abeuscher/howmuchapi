@@ -9,9 +9,9 @@ export default class ImageUploader extends Component {
   }
   render() {
     return pug`
-      .image-uploader(data-parent=this.props.parent)
-        Images(images=this.props.images, removeImage=this.props.removeImage)
-        Buttons(onChange=this.props.onChange)`
+      .image-uploader(data-parent=this.props.parent,key=this.props.id)
+        Images(images=this.props.images, removeImage=this.props.removeImage,key=this.props.id+"-images")
+        Buttons(onChange=this.props.onChange,key=this.props.id+"-buttons")`
   }
 }
 module.exports = ImageUploader;

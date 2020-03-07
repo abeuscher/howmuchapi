@@ -1,18 +1,19 @@
-const React = require('react');
+import React, { Component } from 'react'
 
-class TextInput extends React.Component {
+export default class RangeInput extends Component {
     constructor(props) {
         super(props);
     }
     render() {
         return pug`
-        label(
-            for=this.props.id,
-            key='label-'+this.props.id)=this.props.label
+        label(for=this.props.id,key='label-'+this.props.id)=this.props.label
+            .span.val=this.props.value
         input(
+            type='range',
             key=this.props.id,
-            type="text",
             id=this.props.id,
+            min=this.props.min,
+            max=this.props.max,
             name=this.props.id,
             placeholder=this.props.placeholder,
             value=this.props.value,
@@ -21,4 +22,3 @@ class TextInput extends React.Component {
             )`
     }
 }
-module.exports = TextInput;

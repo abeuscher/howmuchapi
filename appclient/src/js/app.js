@@ -6,6 +6,8 @@ import Menu from "./components/menu.js";
 import Manager from "./components/manager.js";
 
 import TextInput from "./components/form-fields/text-input"
+import RangeInput from "./components/form-fields/range-input"
+import StateDropDown from "./components/form-fields/state-dropdown"
 import DateInput from "./components/form-fields/date-input"
 import ImageUploader from "./components/form-fields/image-uploader"
 
@@ -43,7 +45,7 @@ class App extends Component {
             onClick: this.startCreate,
             buttonType: "simple"
         }, {
-            label: "Change Type",
+            label: "Type",
             onClick: this.changeType,
             buttonType: "type",
             options: ["flower", "dispensary"]
@@ -53,29 +55,91 @@ class App extends Component {
     formFieldTypes = () => {
         return {
             Date: {
-                el: (obj, key, parent, id, changeDate=(date) => this.changeDate(date,key)) => {
-                    return pug`DateInput(key=key,value=obj[key].value,label=key.replace(/_/gi," "),id=key,selected=obj[key].value,onChange=changeDate,parent=parent)`
+                el: (obj, key, parent, id, changeDate = (date) => this.changeDate(date, key)) => {
+                    return pug`
+                        DateInput(
+                            key=key,
+                            value=obj[key].value,
+                            label=key.replace(/_/gi," "),
+                            id=key,selected=obj[key].value,
+                            onChange=changeDate,
+                            parent=parent
+                            )`
                 },
                 validator: {},
                 containerClassName: "col-half"
             },
             Number: {
-                el: (obj, key, parent, handleChange=this.handleChange) => {
-                    return pug`TextInput(key=key,id=key,label=key.replace(/_/gi," "),handleChange=handleChange,value=obj[key].value,parent=parent)`
+                el: (obj, key, parent, handleChange = this.handleChange) => {
+                    if (obj[key].min >= 0) {
+                        return pug`
+                            RangeInput(
+                                key=key,
+                                min=obj[key].min,
+                                max=obj[key].max,
+                                id=key,
+                                label=key.replace(/_/gi," "),
+                                handleChange=handleChange,
+                                value=obj[key].value,
+                                parent=parent
+                                )`
+                    }
+                    else {
+                        return pug`
+                            TextInput(
+                                key=key,
+                                id=key,
+                                label=key.replace(/_/gi," "),
+                                handleChange=handleChange,
+                                value=obj[key].value,
+                                parent=parent
+                                )`
+                    }
+
                 },
                 validator: {},
                 containerClassName: "col-half"
             },
             String: {
-                el: (obj, key, parent, handleChange=this.handleChange) => {
-                    return pug`TextInput(key=key,id=key,label=key.replace(/_/gi," "),handleChange=handleChange,value=obj[key].value,parent=parent)`
+                el: (obj, key, parent, handleChange = this.handleChange) => {
+                    if (obj[key].label == "AL") {
+                        return pug`
+                            StateDropDown(
+                                key=key,
+                                id=key,
+                                label=key.replace(/_/gi," "),
+                                handleChange=handleChange,
+                                value=obj[key].value,
+                                parent=parent
+                                )`
+                    }
+                    else {
+                        return pug`
+                            TextInput(
+                                key=key,
+                                id=key,
+                                label=key.replace(/_/gi," "),
+                                handleChange=handleChange,
+                                value=obj[key].value,
+                                parent=parent
+                                )`
+                    }
+
                 },
                 validator: {},
                 containerClassName: "col-half"
             },
             Images: {
-                el: (obj, key, parent, currentImages = this.state.currentRecord.images.value, onChange = this.onImageUploaderChange, removeImage = this.removeImage,uploading=this.state.uploading) => {
-                    return pug`ImageUploader(key=key,onChange=onChange,images=currentImages,removeImage=removeImage,uploading=uploading,parent=parent)`
+                el: (obj, key, parent, currentImages = this.state.currentRecord.images.value, onChange = this.onImageUploaderChange, removeImage = this.removeImage, uploading = this.state.uploading) => {
+                    return pug`
+                        ImageUploader(
+                            key=key,
+                            id=key,
+                            onChange=onChange,
+                            images=currentImages,
+                            removeImage=removeImage,
+                            uploading=uploading,parent=parent
+                            )`
                 },
                 validator: {},
                 containerClassName: "col-full"
@@ -100,30 +164,32 @@ class App extends Component {
 
     componentDidUpdate() {
         this.setLocalStorage();
-    }   
+    }
 
     startManager = () => {
         this.setState({ settings: Object.assign({}, this.state.settings, { mode: "manager", currentid: null }), currentRecord: null }, this.getEntries);
     }
 
     startCreate = () => {
-        this.setState({ settings: Object.assign({}, this.state.settings, { mode: "create", currentid: null }),
-                        entries: [],
-                        currentRecord:this.createBlankEntry() });
+        this.setState({
+            settings: Object.assign({}, this.state.settings, { mode: "create", currentid: null }),
+            entries: [],
+            currentRecord: this.createBlankEntry()
+        });
     }
 
     changeType = e => {
         //The logic here is not great. When you switch type the current record is immediately removed with no warning. Need to add an error system or notifications to handle this kind of thing.
-        switch(this.state.settings.mode) {
+        switch (this.state.settings.mode) {
             case "create":
             case "edit":
-                this.setState({ settings: Object.assign({}, this.state.settings, { type: e.target.getAttribute("data-value") })},this.startCreate);
+                this.setState({ settings: Object.assign({}, this.state.settings, { type: e.target.getAttribute("data-value") }) }, this.startCreate);
                 break;
             case "manager":
                 this.setState({
-                    settings: { type: e.target.getAttribute("data-value"), mode:"manager",currentid:null },
-                }, this.getEntries);     
-                break;           
+                    settings: { type: e.target.getAttribute("data-value"), mode: "manager", currentid: null },
+                }, this.getEntries);
+                break;
         }
     }
 
@@ -131,7 +197,7 @@ class App extends Component {
         // Only save state if there is currently a record being edited.
         if (this.state.settings.currentid) {
             window.sessionStorage.setItem("weedstate", JSON.stringify(this.state.settings));
-        }  
+        }
     }
 
     getLocalStorage = () => {
@@ -150,7 +216,7 @@ class App extends Component {
         e.preventDefault();
 
         // Transform current state into key/value object for update.
-        let sendData = JSON.stringify(Object.assign({},transformState(this.state.currentRecord),{id:this.state.settings.currentid}));
+        let sendData = JSON.stringify(Object.assign({}, transformState(this.state.currentRecord), { id: this.state.settings.currentid }));
         apiConnector("update", sendData, this.state.settings.type)
             .then(res => {
                 if (res._id) {
@@ -174,14 +240,14 @@ class App extends Component {
             .then(data => {
 
                 // Set record id and shift to edit mode.
-                this.setState({ 
-                            settings: {
-                                mode:"edit",
-                                type:this.state.settings.type,
-                                currentid: data._id
-                            },
-                            currentRecord: Object.assign({}, this.state.currentRecord, { id: data._id })       
-                        })         
+                this.setState({
+                    settings: {
+                        mode: "edit",
+                        type: this.state.settings.type,
+                        currentid: data._id
+                    },
+                    currentRecord: Object.assign({}, this.state.currentRecord, { id: data._id })
+                })
             });
     }
 
@@ -194,7 +260,6 @@ class App extends Component {
                         currentRecord: assignTypes(Schemas()[this.state.settings.type], res, this.formFieldTypes),
                         settings: Object.assign({}, this.state.settings, { currentid: id, mode: "edit" })
                     });
-                    console.log(this.state)
                 }
                 else {
                     this.writeError("Record Not Found!")
@@ -208,13 +273,13 @@ class App extends Component {
     chooseEntry = idx => {
 
         this.setState({
-            settings:{
-                mode:"edit",
-                type:this.state.settings.type,
-                currentid:this.state.entries[idx]._id
+            settings: {
+                mode: "edit",
+                type: this.state.settings.type,
+                currentid: this.state.entries[idx]._id
             },
-            entries:[],
-            currentRecord:assignTypes(Schemas()[this.state.settings.type], this.state.entries[idx], this.formFieldTypes)
+            entries: [],
+            currentRecord: assignTypes(Schemas()[this.state.settings.type], this.state.entries[idx], this.formFieldTypes)
         })
     }
 
@@ -239,13 +304,13 @@ class App extends Component {
 
     onImageUploaderChange = e => {
         this.setState({
-            uploading:true
+            uploading: true
         })
         apiConnector("createImage", e, this.state.settings.type)
             .then((images) => {
                 this.setState({
                     uploading: false,
-                    currentRecord: Object.assign({}, this.state.currentRecord, { images: Object.assign({},this.state.currentRecord.images, { value : this.state.currentRecord.images.value.concat(images)}) })
+                    currentRecord: Object.assign({}, this.state.currentRecord, { images: Object.assign({}, this.state.currentRecord.images, { value: this.state.currentRecord.images.value.concat(images) }) })
                 })
             })
     }
@@ -253,26 +318,37 @@ class App extends Component {
     removeImage = path => {
         // Remove an image given its path. This may not be a good permanent soluton, May need to assign everything a unique id for DOM.
         this.setState({
-            currentRecord: Object.assign({}, this.state.currentRecord, { images: Object.assign({},this.state.currentRecord.images, { value : this.state.currentRecord.images.value.filter(image => image.path !== path)}) })
+            currentRecord: Object.assign({}, this.state.currentRecord, { images: Object.assign({}, this.state.currentRecord.images, { value: this.state.currentRecord.images.value.filter(image => image.path !== path) }) })
         })
     }
 
     handleChange = e => {
         // Take form field change and add it to state.
         e.preventDefault();
-        let newValue = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-        if (e.target.getAttribute("data-parent")!="false") {
+
+        // TODO: This is a shitty solution. Make better.
+        let newValue = "ERROR ON UPDATE"
+         
+        if (e.target.type === "select-one") {     
+            newValue = e.target.options[e.target.selectedIndex].value;
+        }
+        else if (e.target.type === "checkbox") {
+            newValue = e.target.checked
+        }
+        else {
+            newValue = e.target.value
+        }
+        if (e.target.getAttribute("data-parent") != "false") {
             this.setState({
-                currentRecord: Object.assign({}, this.state.currentRecord, { [e.target.getAttribute("data-parent")]: Object.assign({},this.state.currentRecord[e.target.getAttribute("data-parent")], { [e.target.name]: Object.assign({},this.state.currentRecord[e.target.getAttribute("data-parent")][e.target.name], {value:newValue}) }) })
+                currentRecord: Object.assign({}, this.state.currentRecord, { [e.target.getAttribute("data-parent")]: Object.assign({}, this.state.currentRecord[e.target.getAttribute("data-parent")], { [e.target.name]: Object.assign({}, this.state.currentRecord[e.target.getAttribute("data-parent")][e.target.name], { value: newValue }) }) })
             });
         }
         else {
             this.setState({
-                currentRecord: Object.assign({}, this.state.currentRecord, { [e.target.name]: Object.assign({},this.state.currentRecord[e.target.name], { value: newValue }) })
+                currentRecord: Object.assign({}, this.state.currentRecord, { [e.target.name]: Object.assign({}, this.state.currentRecord[e.target.name], { value: newValue }) })
             });
 
         }
-
     }
 
     changeDate(newValue, label) {

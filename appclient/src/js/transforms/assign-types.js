@@ -6,7 +6,6 @@ module.exports = (thisSchema, thisRecord, formSchema) => {
         delete thisSchema.created
     }
     const parseSchema = (schema, record) => {
-        console.log(schema, record);
         let output = {};
         Object.keys(schema).map((key) => {
             if (schema[key].type != undefined) {
