@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+
 function AppSchemas() {
     return {
         "dispensary": {
@@ -70,14 +72,16 @@ function AppSchemas() {
             thc: {
                 type: Number,
                 default:15.00,
-                min:1.00,
-                max:100.00
+                min:0.01,
+                max:40.00,
+                step:.01
             },
             weight: {
                 type: Number,
                 default:3.5,
                 min:1,
-                max:114
+                max:28.5,
+                step:.1
             },
             price: {
                 type: Number,
@@ -123,6 +127,44 @@ function AppSchemas() {
                 type: Date,
                 default: Date.now
             }
+        },
+        "purchase":{
+            thc: {
+                type: Number,
+                default:15.00,
+                min:0.01,
+                max:40.00,
+                step:.01
+            },
+            flower:{
+                ref:"flower",
+                type: mongoose.Schema.Types.ObjectId
+            },
+            dispensary:{
+                ref:"dispensary",
+                type: mongoose.Schema.Types.ObjectId
+            },
+            weight: {
+                type: Number,
+                default:3.5,
+                min:1,
+                max:28.5,
+                step:.1
+            },
+            price: {
+                type: Number,
+                default: 50.00
+            },
+            purchase_date: {
+                type: Date
+            },
+            package_date: {
+                type: Date
+            },
+            created: {
+                type: Date,
+                default: Date.now
+            }      
         }
     }
 }

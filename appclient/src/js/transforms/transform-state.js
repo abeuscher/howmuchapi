@@ -2,7 +2,13 @@ module.exports = (currentState) => {
     const transformState = (state) => {
         let output = {};
         Object.keys(state).map((key, idx) => { 
-            if (state[key].type!=undefined) {
+            if (state[key].ref!=undefined) {
+                output[key] =  { 
+                        ref: key,
+                        _id: state[key].value 
+                    } 
+            }
+            else if (state[key].type!=undefined) {
                 output[key] =  state[key].value 
             }
             else if (typeof state[key]==='object') {

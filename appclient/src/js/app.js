@@ -8,6 +8,8 @@ import Manager from "./components/manager.js";
 import TextInput from "./components/form-fields/text-input"
 import RangeInput from "./components/form-fields/range-input"
 import StateDropDown from "./components/form-fields/state-dropdown"
+import FieldSelect from "./components/form-fields/field-select"
+import CurrencyInput from "./components/form-fields/currency-input"
 import DateInput from "./components/form-fields/date-input"
 import ImageUploader from "./components/form-fields/image-uploader"
 
@@ -30,6 +32,7 @@ class App extends Component {
             },
             msgbox: "", // Alert Message at bottom of form. TODO: Make this an object with references to all form fields
             entries: [], // Entries when in manager mode
+            selectEntries:{}, //Entries for select menus TODO: This does not feel right. Make it better.
             currentRecord: {}, // Current record when editing
         }, this.getLocalStorage()); // Merge object with current save state in local storage - just the settings portion of the state.
     }
@@ -48,12 +51,30 @@ class App extends Component {
             label: "Type",
             onClick: this.changeType,
             buttonType: "type",
-            options: ["flower", "dispensary"]
+            options: Object.keys(Schemas())
         }]
     }
     // Form field Elements. TODO: This is where to add validation.
     formFieldTypes = () => {
         return {
+            _id: {
+                el: (obj, key, parent, handleChange=this.handleChange, populate=this.populateFieldSelect, entries=this.state.selectEntries) => {
+                    return pug`
+                        FieldSelect(
+                            key=key,
+                            ref=obj[key].ref,
+                            value=obj[key].value,
+                            label=key.replace(/_/gi," "),
+                            id=key,
+                            handleChange=handleChange,
+                            entries=entries,
+                            parent=parent,
+                            populate=populate
+                            )`
+                },
+                validator: {},
+                containerClassName: "col-half"                
+            },
             Date: {
                 el: (obj, key, parent, id, changeDate = (date) => this.changeDate(date, key)) => {
                     return pug`
@@ -77,6 +98,7 @@ class App extends Component {
                                 key=key,
                                 min=obj[key].min,
                                 max=obj[key].max,
+                                step=obj[key].step || 1,
                                 id=key,
                                 label=key.replace(/_/gi," "),
                                 handleChange=handleChange,
@@ -84,8 +106,19 @@ class App extends Component {
                                 parent=parent
                                 )`
                     }
-                    else if (parseFloat(obj[key].label)%1!=0) {
-                        console.log(key,obj[key].label)
+                    else if (key=="price") {
+                        return pug`
+                            CurrencyInput(
+                                key=key,
+                                min=obj[key].min,
+                                max=obj[key].max,
+                                step=obj[key].step || 1,
+                                id=key,
+                                label=key.replace(/_/gi," "),
+                                handleChange=handleChange,
+                                value=obj[key].value,
+                                parent=parent
+                                )`                        
                     }
                     else {
                         return pug`
@@ -286,6 +319,18 @@ class App extends Component {
         })
     }
 
+    populateFieldSelect = key => {
+        apiConnector("read", "{}", key)
+            .then(res => {
+                
+                this.setState({ 
+                    selectEntries: Object.assign(
+                        {},
+                        this.state.selectEntries,
+                        {[key]:res}) })
+            })
+    }
+
     getEntries = () => {
         apiConnector("read", "{}", this.state.settings.type)
             .then(res => {
@@ -328,7 +373,7 @@ class App extends Component {
     handleChange = e => {
         // Take form field change and add it to state.
         e.preventDefault();
-
+        console.log(e.target);
         // TODO: This is a shitty solution. Make better.
         let newValue = "ERROR ON UPDATE"
          

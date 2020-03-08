@@ -8,5 +8,8 @@
     "startclient": "gulp --cwd ./appclient",
     "resetserver": "docker-compose restart",
     "startapp": "docker-compose up -d && yarn startclient"
+  },
+  "dependencies" : {
+    "mongoose" : "5.9.2"
   }
 }

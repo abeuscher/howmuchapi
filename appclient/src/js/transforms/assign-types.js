@@ -9,7 +9,15 @@ module.exports = (thisSchema, thisRecord, formSchema) => {
         let output = {};
         Object.keys(schema).map((key) => {
             if (schema[key].type != undefined) {
-                if (schema[key].type.name == "Date") {
+                if (schema[key].ref!=undefined) {
+                    output[key] = {
+                        value:record[key] ? record[key] : "",
+                        type:"_id",
+                        ref:schema[key].ref,
+                        formControl: formFields["_id"]
+                    }
+                }
+                else if (schema[key].type.name == "Date") {
                     output[key] = {
                         value: record[key] ? new Date(record[key]) : new Date(),
                         type: schema[key].type.name,
@@ -25,6 +33,7 @@ module.exports = (thisSchema, thisRecord, formSchema) => {
                         default: parseFloat(schema[key].default) || 0,
                         min: parseFloat(schema[key].min) || -1,
                         max: parseFloat(schema[key].max) || -1,
+                        step: parseFloat(schema[key].step) || -1,
                         formControl: formFields[schema[key].type.name]
                     }
                 }
@@ -48,6 +57,7 @@ module.exports = (thisSchema, thisRecord, formSchema) => {
                 output[key] = parseSchema(schema[key], record[key] ? record[key] : {})
             }
         });
+        //console.log(output)
         return output
     }
     return parseSchema(thisSchema, thisRecord);

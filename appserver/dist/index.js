@@ -116,3 +116,15 @@ app.listen(5000, () => {
         }
     });
 });
+function fixSchemas(schema) {
+    var output = {};
+    Object.keys(schema).map(key => {
+        if (typeof schema[key]=='object') {
+            output[key]=fixSchemas(schema[key]);
+        }
+        else {
+            output[key] == schema[key] == "_id" ? mongoose.Schema.Types.ObjectId : schema[key]
+        }
+    })
+    return output;
+}
