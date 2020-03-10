@@ -14,6 +14,7 @@ module.exports = (thisSchema, thisRecord, formSchema) => {
                         value:record[key] ? record[key] : "",
                         type:"_id",
                         ref:schema[key].ref,
+                        newRecord:false,
                         formControl: formFields["_id"]
                     }
                 }

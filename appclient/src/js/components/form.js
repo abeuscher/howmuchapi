@@ -20,17 +20,17 @@ export default class WeedForm extends Component {
                             span=this.props.type                            
                     .form-row(key="fr-2")
                         - let counter = 0;
-                        for key in Object.keys(this.props.currentRecord)
-                            if this.props.currentRecord[key]
-                                if this.props.currentRecord[key].formControl
-                                    div(key='form-row-'+counter,className=this.props.currentRecord[key].formControl.containerClassName)=this.props.currentRecord[key].formControl.el(this.props.currentRecord,key,false)
+                        for idx in Object.keys(this.props.currentRecord)
+                            if this.props.currentRecord[idx]
+                                if this.props.currentRecord[idx].formControl
+                                    div(key='form-row-'+counter,className=this.props.currentRecord[idx].formControl.containerClassName)=this.props.currentRecord[idx].formControl.el(this.props.currentRecord,idx,false)
                                     - counter++
-                                else if typeof this.props.currentRecord[key]=="object"
+                                else if typeof this.props.currentRecord[idx]=="object"
                                     .field-group(key="field-group-"+counter)
-                                        h2=key.replace(/_/gi," ")
-                                        for subfield in Object.keys(this.props.currentRecord[key])
-                                            if this.props.currentRecord[key][subfield].formControl
-                                                div(depth="field-group",parent=key,key='form-row-'+counter,className=this.props.currentRecord[key][subfield].formControl.containerClassName)=this.props.currentRecord[key][subfield].formControl.el(this.props.currentRecord[key],subfield,key)
+                                        h2=idx.replace(/_/gi," ")
+                                        for subfield in Object.keys(this.props.currentRecord[idx])
+                                            if this.props.currentRecord[idx][subfield].formControl
+                                                div(depth="field-group",parent=idx,key='form-row-'+counter,className=this.props.currentRecord[idx][subfield].formControl.containerClassName)=this.props.currentRecord[idx][subfield].formControl.el(this.props.currentRecord[idx],subfield,idx)
                                                 - counter++
                     .form-row(key="fr-3")
                         .col-full(key='button-bucket')

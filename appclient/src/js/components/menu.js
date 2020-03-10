@@ -20,7 +20,7 @@ export default class WeedMenu extends Component {
     render() {
         return pug`
             nav(key='nav')
-                for buttonObj,idx in this.props.buttons()
+                for buttonObj,idx in this.props.buttons
                     if buttonObj.buttonType=="simple"
                         Button(key='mbutt'+idx,label=buttonObj.label,onClick=buttonObj.onClick,cb=buttonObj.cb,className=buttonObj.className)
                     else if buttonObj.buttonType=="type" && buttonObj.options!=undefined

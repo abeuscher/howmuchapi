@@ -11,6 +11,7 @@ import StateDropDown from "./components/form-fields/state-dropdown"
 import FieldSelect from "./components/form-fields/field-select"
 import CurrencyInput from "./components/form-fields/currency-input"
 import DateInput from "./components/form-fields/date-input"
+import WysiwygInput from "./components/form-fields/wysiwyg-input"
 import ImageUploader from "./components/form-fields/image-uploader"
 
 import assignTypes from './transforms/assign-types'
@@ -19,6 +20,30 @@ import transformState from './transforms/transform-state'
 import apiConnector from './components/api-connector'
 
 import Schemas from '../../../schemas/schemas.js'
+/*
+
+    App flow:
+     - User starts on "Enter Purchase"
+     - From there, if they are missing any of the other fields, they can assign names to stubs from within the form
+     - Menu
+        - Manager // Built
+            - Welcome message // TODO
+            - Manage entries of all types // Built. TOD: Controls
+            - Edit Entry // Built. TODO: Rework controls to handle subfield names / data
+            - Create New Entry of Type
+            - Maybe a photo / upload manager
+        - Data Playground
+            - Ways to manipulate the data
+        - Reviews
+            - Add / Edit Reviews
+            - Browse Reviews
+        - Enter Purchase
+            - I mean, it's a form. Plus poison. We'll add some poison.
+
+*/
+
+
+
 
 class App extends Component {
 
@@ -26,39 +51,53 @@ class App extends Component {
         super(props);
         this.state = Object.assign({}, {
             settings: {
-                mode: "manager", // manager, edit, or create
-                type: "flower", // dispensary or flower  
+                mode: "create", // manager, edit, or create
+                type: "purchase", // dispensary or flower  
                 currentid: null // active record id
             },
             msgbox: "", // Alert Message at bottom of form. TODO: Make this an object with references to all form fields
             entries: [], // Entries when in manager mode
-            selectEntries:{}, //Entries for select menus TODO: This does not feel right. Make it better.
+            selectEntries: {}, //Entries for select menus TODO: This does not feel right. Make it better.
             currentRecord: {}, // Current record when editing
         }, this.getLocalStorage()); // Merge object with current save state in local storage - just the settings portion of the state.
     }
 
     // Buttons for App Menu
-    menuButtons = () => {
-        return [{
-            label: "Manage Entries",
-            onClick: this.startManager,
-            buttonType: "simple"
-        }, {
-            label: "New Entry",
-            onClick: this.startCreate,
-            buttonType: "simple"
-        }, {
-            label: "Type",
-            onClick: this.changeType,
-            buttonType: "type",
-            options: Object.keys(Schemas())
-        }]
+    menuButtons = layoutName => {
+        var configs = {
+            "default": [{
+                label: "Manage Entries",
+                onClick: this.startManager,
+                buttonType: "simple"
+            }, {
+                label: "New Entry",
+                onClick: this.startNewPurchase,
+                buttonType: "simple"
+            }],
+            "manager": [{
+                label: "Manage Entries",
+                onClick: this.startManager,
+                buttonType: "simple"
+            }, {
+                label: "New Entry",
+                onClick: this.startCreate,
+                buttonType: "simple"
+            }, {
+                label: "Record Type",
+                onClick: this.changeType,
+                buttonType: "type",
+                options: Object.keys(Schemas())
+            }]
+        }
+
+        return configs[layoutName]
+
     }
     // Form field Elements. TODO: This is where to add validation.
     formFieldTypes = () => {
         return {
             _id: {
-                el: (obj, key, parent, handleChange=this.handleChange, populate=this.populateFieldSelect, entries=this.state.selectEntries) => {
+                el: (obj, key, parent, handleChange = this.handleChange, populate = this.populateFieldSelect, entries = this.state.selectEntries, addNewSubfield = this.addNewSubfield) => {
                     return pug`
                         FieldSelect(
                             key=key,
@@ -67,13 +106,15 @@ class App extends Component {
                             label=key.replace(/_/gi," "),
                             id=key,
                             handleChange=handleChange,
+                            addNewSubfield=addNewSubfield,
+                            newRecord=obj[key].newRecord,
                             entries=entries,
                             parent=parent,
                             populate=populate
                             )`
                 },
                 validator: {},
-                containerClassName: "col-half"                
+                containerClassName: "col-full"
             },
             Date: {
                 el: (obj, key, parent, id, changeDate = (date) => this.changeDate(date, key)) => {
@@ -88,10 +129,10 @@ class App extends Component {
                             )`
                 },
                 validator: {},
-                containerClassName: "col-half"
+                containerClassName: "col-full"
             },
             Number: {
-                el: (obj, key, parent, handleChange = this.handleChange, handleCurrencyChange=this.handleCurrencyChange) => {
+                el: (obj, key, parent, handleChange = this.handleChange, handleCurrencyChange = this.handleCurrencyChange) => {
                     if (obj[key].min >= 0) {
                         return pug`
                             RangeInput(
@@ -106,7 +147,7 @@ class App extends Component {
                                 parent=parent
                                 )`
                     }
-                    else if (key=="price") {
+                    else if (key == "price") {
                         return pug`
                             CurrencyInput(
                                 key=key,
@@ -118,7 +159,7 @@ class App extends Component {
                                 handleChange=handleChange,
                                 value=obj[key].value,
                                 parent=parent
-                                )`                        
+                                )`
                     }
                     else {
                         return pug`
@@ -134,7 +175,7 @@ class App extends Component {
 
                 },
                 validator: {},
-                containerClassName: "col-half"
+                containerClassName: "col-full"
             },
             String: {
                 el: (obj, key, parent, handleChange = this.handleChange) => {
@@ -149,6 +190,17 @@ class App extends Component {
                                 parent=parent
                                 )`
                     }
+                    else if (obj[key].label == "wysiwyg") {
+                        return pug`
+                            WysiwygInput(
+                                key=key,
+                                id=key,
+                                label=key.replace(/_/gi," "),
+                                handleChange=handleChange,
+                                value=obj[key].value,
+                                parent=parent
+                                )`
+                    }
                     else {
                         return pug`
                             TextInput(
@@ -163,7 +215,7 @@ class App extends Component {
 
                 },
                 validator: {},
-                containerClassName: "col-half"
+                containerClassName: "col-full"
             },
             Images: {
                 el: (obj, key, parent, currentImages = this.state.currentRecord.images.value, onChange = this.onImageUploaderChange, removeImage = this.removeImage, uploading = this.state.uploading) => {
@@ -182,11 +234,28 @@ class App extends Component {
             }
         }
     }
-
+    addNewSubfield = (e, key, parent) => {
+        e.preventDefault();
+        if (this.state.currentRecord[key].newRecord == true) {
+            this.state.currentRecord[key].newRecord = false;
+            this.state.currentRecord[key].value = this.state.currentRecord[key].oldValue || ""
+        }
+        else {
+            this.state.currentRecord[key].newRecord = true
+            this.state.currentRecord[key].oldValue = this.state.currentRecord[key].value || ""
+            this.state.currentRecord[key].value = ""
+        }
+        this.setState(this.state)
+    }
     createBlankEntry = () => {
         return assignTypes(Schemas()[this.state.settings.type], {}, this.formFieldTypes)
     }
-
+    startNewPurchase = () => {
+        this.setState({
+            settings: Object.assign({}, this.state.settings, { type: "purchase" })
+        });
+        this.startCreate();
+    }
     componentDidMount() {
         switch (this.state.settings.mode) {
             case "manager":
@@ -203,6 +272,7 @@ class App extends Component {
     }
 
     startManager = () => {
+        console.log("start manager")
         this.setState({ settings: Object.assign({}, this.state.settings, { mode: "manager", currentid: null }), currentRecord: null }, this.getEntries);
     }
 
@@ -250,41 +320,105 @@ class App extends Component {
 
     updateEntry = e => {
         e.preventDefault();
+        console.log("Before transform", this.state);
+
+        const updateRecord = data => {
+            let sendData = JSON.stringify(Object.assign({}, data, { id: this.state.settings.currentid }));
+
+            apiConnector("update", sendData, this.state.settings.type)
+                .then(res => {
+                    if (res._id) {
+                        this.writeError("Entry Updated");
+                    }
+                    else {
+                        this.writeError("Error on Update");
+                        console.log("Error response:", res);
+                    }
+                });
+        }
 
         // Transform current state into key/value object for update.
-        let sendData = JSON.stringify(Object.assign({}, transformState(this.state.currentRecord), { id: this.state.settings.currentid }));
-        apiConnector("update", sendData, this.state.settings.type)
-            .then(res => {
-                if (res._id) {
-                    this.writeError("Entry Updated");
-                }
-                else {
-                    this.writeError("Error on Update");
-                    console.log("Error response:", res);
-                }
-            });
+        let newData = transformState(this.state.currentRecord)
+        if (newData.extraRecords.length > 0) {
+            newData.extraRecords.forEach((data, idx) => {
+                apiConnector("create", JSON.stringify(data.record), data.type)
+                    .then(res => {
+                        if (res._id) {
+                            this.setState({
+                                currentRecord: Object.assign({}, this.state.currentRecord, { [data.key]: Object.assign({}, this.state.currentRecord[data.key], { newRecord: false, value: res._id }) })
+                            })
+                            this.populateFieldSelect(data.key)
+                            newData.mainRecord[data.key] = { ref: data.type, _id: res._id }
+                            if (idx == newData.extraRecords.length - 1) {
+                                updateRecord(newData.mainRecord);
+                            }
+                        }
+                        else {
+                            this.writeError("ERROR ON SUBFIELD ENTRY: ", data)
+                        }
+
+                    })
+
+            })
+        }
+        else {
+            updateRecord(newData.mainRecord)
+        }
+
+
 
     }
 
     createNewEntry = e => {
         e.preventDefault();
+        const createRecord = data => {
+            // Transform state into DB record format then insert.
+            var sendData = JSON.stringify(data)
 
-        // Transform state into DB record format then insert.
-        var sendData = JSON.stringify(transformState(this.state.currentRecord))
-        console.log(JSON.parse(sendData))
-        apiConnector("create", sendData, this.state.settings.type)
-            .then(data => {
+            apiConnector("create", sendData, this.state.settings.type)
+                .then(res => {
+                    // Set record id and shift to edit mode.
+                    if (res._id) {
+                        this.setState({
+                            settings: {
+                                mode: "edit",
+                                type: this.state.settings.type,
+                                currentid: res._id
+                            }
+                        })
+                    }
+                    else {
+                        console.log("ERROR ON CREATE", data)
+                    }
 
-                // Set record id and shift to edit mode.
-                this.setState({
-                    settings: {
-                        mode: "edit",
-                        type: this.state.settings.type,
-                        currentid: data._id
-                    },
-                    currentRecord: Object.assign({}, this.state.currentRecord, { id: data._id })
-                })
-            });
+                });
+        }
+        let newData = transformState(this.state.currentRecord)
+        if (newData.extraRecords.length > 0) {
+            newData.extraRecords.forEach((data, idx) => {
+                apiConnector("create", JSON.stringify(data.record), data.type)
+                    .then(res => {
+                        console.log(res)
+                        if (res._id) {
+                            newData.mainRecord[data.key] = { ref: data.type, _id: res._id }
+                            this.setState({
+                                currentRecord: Object.assign({}, this.state.currentRecord, { [data.key]: Object.assign({}, this.state.currentRecord[data.key], { newRecord: false, value: res._id }) })
+                            })
+                            if (idx == newData.extraRecords.length - 1) {
+                                createRecord(newData.mainRecord);
+                            }
+                        }
+                        else {
+                            this.writeError("ERROR ON SUBFIELD ENTRY: ", data)
+                        }
+
+                    })
+
+            })
+        }
+        else {
+            createRecord(newData.mainRecord)
+        }
     }
 
     editEntry = id => {
@@ -292,6 +426,7 @@ class App extends Component {
         apiConnector("read", JSON.stringify({ "id": id }), this.state.settings.type)
             .then(res => {
                 if (!res.error) {
+                    delete res.id
                     this.setState({
                         currentRecord: assignTypes(Schemas()[this.state.settings.type], res, this.formFieldTypes),
                         settings: Object.assign({}, this.state.settings, { currentid: id, mode: "edit" })
@@ -322,12 +457,13 @@ class App extends Component {
     populateFieldSelect = key => {
         apiConnector("read", "{}", key)
             .then(res => {
-                
-                this.setState({ 
+
+                this.setState({
                     selectEntries: Object.assign(
                         {},
                         this.state.selectEntries,
-                        {[key]:res}) })
+                        { [key]: res })
+                })
             })
     }
 
@@ -370,35 +506,58 @@ class App extends Component {
         })
     }
 
-    handleChange = e => {
-        // Take form field change and add it to state.
-        e.preventDefault();
-        console.log(e.target);
-        // TODO: This is a shitty solution. Make better.
+    handleChange = (e, editor) => {
+
         let newValue = "ERROR ON UPDATE"
-         
-        if (e.target.type === "select-one") {     
-            newValue = e.target.options[e.target.selectedIndex].value;
-        }
-        else if (e.target.type === "checkbox") {
-            newValue = e.target.checked
+        let name = "NAME NOT DEFINED"
+
+        if (typeof e.preventDefault != "function") {
+            console.log(e, editor);
         }
         else {
-            newValue = e.target.value
+            e.preventDefault();
+
+            if (e.target.type === "select-one") {
+                newValue = e.target.options[e.target.selectedIndex].value;
+                name = e.target.name
+            }
+            else if (e.target.type === "checkbox") {
+                newValue = e.target.checked
+                name = e.target.name
+            }
+            else {
+                newValue = e.target.value
+                name = e.target.name
+            }
         }
         if (e.target.getAttribute("data-parent") != "false") {
             this.setState({
-                currentRecord: Object.assign({}, this.state.currentRecord, { [e.target.getAttribute("data-parent")]: Object.assign({}, this.state.currentRecord[e.target.getAttribute("data-parent")], { [e.target.name]: Object.assign({}, this.state.currentRecord[e.target.getAttribute("data-parent")][e.target.name], { value: newValue }) }) })
+                currentRecord: Object.assign({}, this.state.currentRecord,
+                    {
+                        [e.target.getAttribute("data-parent")]: Object.assign({}, this.state.currentRecord[e.target.getAttribute("data-parent")],
+                            {
+                                [name]: Object.assign({}, this.state.currentRecord[e.target.getAttribute("data-parent")][name],
+                                    {
+                                        value: newValue
+                                    })
+                            })
+                    })
             });
         }
         else {
             this.setState({
-                currentRecord: Object.assign({}, this.state.currentRecord, { [e.target.name]: Object.assign({}, this.state.currentRecord[e.target.name], { value: newValue }) })
+                currentRecord: Object.assign({}, this.state.currentRecord,
+                    {
+                        [e.target.name]: Object.assign({}, this.state.currentRecord[e.target.name],
+                            {
+                                value: newValue
+                            })
+                    })
             });
 
         }
     }
-    changeDate(newValue, label) {
+    changeDate = (newValue, label) => {
         // Process date field change
         this.setState({
             currentRecord: Object.assign({}, this.state.currentRecord, { [label]: Object.assign({}, this.state.currentRecord[label], { value: newValue }) })
@@ -412,13 +571,14 @@ class App extends Component {
     }
 
     render() {
+
         return pug`
-        Menu(
-            key="main-nav-bucket",
-            buttons=this.menuButtons,
-            selectedType=this.state.settings.type
-            )
         if this.state.settings.mode=="create" || this.state.settings.mode=="edit"
+            Menu(
+                key="main-nav-bucket",
+                buttons=this.menuButtons("default")
+                selectedType=this.state.settings.type
+                )
             WeedForm(
                 key='form-main',
                 currentRecord=this.state.currentRecord,
@@ -431,6 +591,11 @@ class App extends Component {
                 id=this.state.settings.currentid
                 )
         if this.state.settings.mode=="manager"
+            Menu(
+                key="main-nav-bucket",
+                buttons=this.menuButtons("manager"),
+                selectedType=this.state.settings.type
+                )
             Manager(
                 key='manager-main',
                 type=this.state.settings.type,

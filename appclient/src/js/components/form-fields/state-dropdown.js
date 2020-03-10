@@ -77,7 +77,7 @@ export default class StateDropDown extends Component {
             data-parent=this.props.parent,
             onChange=this.props.handleChange)
             for idx in Object.keys(states)
-                option(key=idx,value=idx)=idx
+                option(key=this.props.id+idx,value=idx)=idx
 `
     }
 }
