@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 
-export default class WeedForm extends Component {
+export default class EditForm extends Component {
 
     constructor(props) {
         super(props); 
@@ -8,7 +8,7 @@ export default class WeedForm extends Component {
 
     render() {
         return pug`
-            form(onSubmit=this.props.createEntry,method="post",className=this.props.mode)
+            form.app-form(onSubmit=this.props.createEntry,method="post",className=this.props.mode)
                 .inner
                     .header-row(key="fr-1")
                         if this.props.id
@@ -27,7 +27,7 @@ export default class WeedForm extends Component {
                                     - counter++
                                 else if typeof this.props.currentRecord[idx]=="object"
                                     .field-group(key="field-group-"+counter)
-                                        h2=idx.replace(/_/gi," ")
+                                        h2(key="field-group-"+counter+"-header")=idx.replace(/_/gi," ")
                                         for subfield in Object.keys(this.props.currentRecord[idx])
                                             if this.props.currentRecord[idx][subfield].formControl
                                                 div(depth="field-group",parent=idx,key='form-row-'+counter,className=this.props.currentRecord[idx][subfield].formControl.containerClassName)=this.props.currentRecord[idx][subfield].formControl.el(this.props.currentRecord[idx],subfield,idx)
@@ -38,8 +38,8 @@ export default class WeedForm extends Component {
                                 button(id='btn-update',onClick=this.props.updateEntry,key='btn-update') Update Record
                                 button(id='btn-delete',onClick=this.props.deleteEntry,key='btn-delete') Delete Record
                             else
-                                button(id='btn-submit',type="submit") Send Form
+                                button(key='btn-submit', id='btn-submit',type="submit") Send Form
                         .col-full.alert-box(key='error-box')
-                            p=this.props.msg`
+                            p(key='msg-wrapper')=this.props.msg`
     }
 }

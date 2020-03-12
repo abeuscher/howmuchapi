@@ -1,44 +1,46 @@
-form {
-    .inner {
+.header-row {
+  flex-basis: 100%;
+  border-bottom: 1px solid $dark-green;
+  margin-bottom: $gutter-width;
+  p {
+    font-size: 12px;
+    font-weight: 300;
+    &.id {
+      font-size: 10px;
+    }
+  }
+}
+
+.app-form {
+  padding: $gutter-width;
+  .inner {
+    h2 {
+      text-align:center;
+      font-size:18px;
+    }
+  }
+  .flex-row {
+    
+    @include bp(m) {
       display: flex;
       flex-wrap: wrap;
-    }    
-  .form-row {
-    width: 100%;
-    @include bp(s) {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-    }
-
-    .col-half,
-    .col-full {
-      padding-bottom: $gutter-width;
+      justify-content: space-between;
+      padding-bottom:$gutter-width;
     }
     .col-full {
-      flex-basis: 100%;
+      flex-basis:100%
     }
-    .col-half {
-      flex-basis: 100%;
-      @include bp(m) {
-        flex-basis: 49%;
-      }
+    .col-3 {
+      flex-basis: 30%;
+    }
+    .col-2 {
+      flex-basis: 45%;
+    }
+    select {
+      width: 100%;
     }
   }
 
-  .header-row {
-    flex-basis: 100%;
-    border-bottom:1px solid $dark-green;
-    margin-bottom:$gutter-width;
-    p {
-      font-size: 12px;
-      font-weight: 300;
-      &.id {
-        font-size: 10px;
-      }
-    }
-  }
-  padding: $gutter-width;
   label {
     padding: 0.25em;
     text-transform: uppercase;
@@ -47,13 +49,14 @@ form {
     display: block;
   }
   input {
-      border:none;
-      padding:0;
+    border: none;
+    padding: 0;
   }
   input[type="text"] {
     padding: 0.25em 0;
-    text-indent:.25em;
+    text-indent: 0.25em;
     width: 100%;
+    max-width: 350px;
   }
   button,
   input[type="submit"],
@@ -64,128 +67,11 @@ form {
   .react-datepicker-wrapper {
     width: 100%;
     input[type="text"] {
-      background:transparent;
-      cursor:pointer;
-      &:focus, &:active {
-        outline:none;
+      cursor: text;
+      &:focus,
+      &:active {
+        outline: none;
       }
-    }
-  }
-  .field-group {
-    flex-basis: 100%;
-    label {
-      .val {
-        float: right;
-        font-weight: bold;
-        color: $off-black;
-      }
-    }
-    @include bp(s) {
-      display: flex;
-      flex-wrap:wrap;
-      justify-content: space-between;
-      h2 {
-          flex-basis:100%;
-      }
-      .col-half {
-          flex-basis:30%;
-          text-align: center;
-      }
-    }
-  }
-  input[type="range"] {
-    -webkit-appearance: none;
-    width: 90%;
-    background: transparent;
-    &::-webkit-slider-thumb {
-      -webkit-appearance: none;
-    }
-    &:focus {
-      outline: none;
-    }
-    &::-ms-track {
-      width: 90%;
-      cursor: pointer;
-      background: transparent;
-      border-color: transparent;
-      color: transparent;
-    }
-    &::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      border: 1px solid $black;
-      height: 36px;
-      width: 16px;
-      border-radius: 3px;
-      background: $white;
-      cursor: pointer;
-      margin-top: -14px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
-      box-shadow: 1px 1px 1px $black, 0px 0px 1px $off-black; /* Add cool effects to your sliders! */
-    }
-    &::-moz-range-thumb {
-      box-shadow: 1px 1px 1px $black, 0px 0px 1px $off-black;
-      border: 1px solid $black;
-      height: 36px;
-      width: 16px;
-      border-radius: 3px;
-      background: $white;
-      cursor: pointer;
-    }
-    &::-ms-thumb {
-      box-shadow: 1px 1px 1px $black, 0px 0px 1px $off-black;
-      border: 1px solid $black;
-      height: 36px;
-      width: 16px;
-      border-radius: 3px;
-      background: $white;
-      cursor: pointer;
-    }
-    &::-webkit-slider-runnable-track {
-      width: 100%;
-      height: 8.4px;
-      cursor: pointer;
-      box-shadow: 1px 1px 1px $black, 0px 0px 1px $off-black;
-      background: $light-green;
-      border-radius: 1.3px;
-      border: 0.2px solid darken($off-black, 5%);
-    }
-    &:focus::-webkit-slider-runnable-track {
-      background: $dark-green;
-    }
-    &::-moz-range-track {
-      width: 100%;
-      height: 8.4px;
-      cursor: pointer;
-      box-shadow: 1px 1px 1px $black, 0px 0px 1px $off-black;
-      background: $light-green;
-      border-radius: 1.3px;
-      border: 0.2px solid darken($off-black, 5%);
-    }
-    &::-ms-track {
-      width: 100%;
-      height: 8.4px;
-      cursor: pointer;
-      background: transparent;
-      border-color: transparent;
-      border-width: 16px 0;
-      color: transparent;
-    }
-    &::-ms-fill-lower {
-      background: #2a6495;
-      border: 0.2px solid darken($off-black, 5%);
-      border-radius: 2.6px;
-      box-shadow: 1px 1px 1px $black, 0px 0px 1px $off-black;
-    }
-    &:focus::-ms-fill-lower {
-      background: $light-green;
-    }
-    &::-ms-fill-upper {
-      background: $light-green;
-      border: 0.2px solid darken($off-black, 5%);
-      border-radius: 2.6px;
-      box-shadow: 1px 1px 1px $black, 0px 0px 1px $off-black;
-    }
-    &:focus::-ms-fill-upper {
-      background: $dark-green;
     }
   }
 }

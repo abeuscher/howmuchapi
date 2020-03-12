@@ -26,7 +26,15 @@ module.exports = (currentState) => {
                 }
             }
             else if (state[key].type!=undefined) {
-                output[key] =  state[key].value 
+
+                // Assign Auto title to purchases. Definitely need a better way to do this.
+                if (key=="title" && state.distributor.textValue!="") {
+                    output[key]=String("Purchase of "+state.distributor.textValue+"'s "+state.product.textValue+" from "+state.dispensary.textValue)
+                }
+                else {
+                    output[key] =  state[key].value 
+                }
+                
             }
             else if (typeof state[key]==='object') {
                 output[key] =  transformState(state[key])

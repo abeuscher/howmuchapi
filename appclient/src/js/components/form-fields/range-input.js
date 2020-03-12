@@ -8,10 +8,7 @@ export default class RangeInput extends Component {
         return pug`
         - let step = this.props.step
         label(for=this.props.id,key='label-'+this.props.id)=this.props.label    
-            if this.props.id=="weight"
-                .span.val=this.props.value + "(g) "+(this.props.value/28.5).toFixed(3)+"oz"
-            else    
-                .span.val=this.props.value
+            .span.val=this.props.value || this.props.min
         input(
             type='range',
             key=this.props.id,
@@ -21,7 +18,7 @@ export default class RangeInput extends Component {
             step=step,
             name=this.props.id,
             placeholder=this.props.placeholder,
-            value=this.props.value,
+            value=this.props.value || this.props.min,
             onChange=this.props.handleChange,
             data-parent=this.props.parent
             )`

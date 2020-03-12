@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
 import ReactDOM from 'react-dom'
 
-import WeedForm from "./components/form.js";
+import EditForm from "./components/form.js";
+import PurchaseForm from "./components/purchase-form.js";
 import Menu from "./components/menu.js";
 import Manager from "./components/manager.js";
 
@@ -10,6 +11,7 @@ import RangeInput from "./components/form-fields/range-input"
 import StateDropDown from "./components/form-fields/state-dropdown"
 import FieldSelect from "./components/form-fields/field-select"
 import CurrencyInput from "./components/form-fields/currency-input"
+import WeightInput from "./components/form-fields/weight-input"
 import DateInput from "./components/form-fields/date-input"
 import WysiwygInput from "./components/form-fields/wysiwyg-input"
 import ImageUploader from "./components/form-fields/image-uploader"
@@ -20,12 +22,15 @@ import transformState from './transforms/transform-state'
 import apiConnector from './components/api-connector'
 
 import Schemas from '../../../schemas/schemas.js'
+
 /*
 
     App flow:
      - User starts on "Enter Purchase"
      - From there, if they are missing any of the other fields, they can assign names to stubs from within the form
      - Menu
+      - On user intro, they have to choose what they like to call weed. Then it is used throughout navand text. Interesting idea.
+      - "I CONSUMED", "I PURCHASED","STATS","REVIEWS"
         - Manager // Built
             - Welcome message // TODO
             - Manage entries of all types // Built. TOD: Controls
@@ -97,17 +102,19 @@ class App extends Component {
     formFieldTypes = () => {
         return {
             _id: {
-                el: (obj, key, parent, handleChange = this.handleChange, populate = this.populateFieldSelect, entries = this.state.selectEntries, addNewSubfield = this.addNewSubfield) => {
+                el: (obj, key, parent, handleChange = this.handleChange, populate = this.populateFieldSelect, entries = this.state.selectEntries, addNewSubfield = this.addNewSubfield, editSubRecord = this.editSubRecord) => {
                     return pug`
                         FieldSelect(
                             key=key,
                             ref=obj[key].ref,
                             value=obj[key].value,
+                            textValue=obj[key].textValue,
                             label=key.replace(/_/gi," "),
                             id=key,
                             handleChange=handleChange,
                             addNewSubfield=addNewSubfield,
                             newRecord=obj[key].newRecord,
+                            editSubRecord=editSubRecord,
                             entries=entries,
                             parent=parent,
                             populate=populate
@@ -132,10 +139,21 @@ class App extends Component {
                 containerClassName: "col-full"
             },
             Number: {
-                el: (obj, key, parent, handleChange = this.handleChange, handleCurrencyChange = this.handleCurrencyChange) => {
-                    if (obj[key].min >= 0) {
+                el: (obj, key, parent, handleChange = this.handleChange) => {
+                    if (key == "weight") {
                         return pug`
-                            RangeInput(
+                            WeightInput(
+                                key=key,
+                                id=key,
+                                label=key.replace(/_/gi," "),
+                                handleChange=handleChange,
+                                value=obj[key].value,
+                                parent=parent
+                                )`
+                    }
+                    else if (key == "price") {
+                        return pug`
+                            CurrencyInput(
                                 key=key,
                                 min=obj[key].min,
                                 max=obj[key].max,
@@ -147,9 +165,9 @@ class App extends Component {
                                 parent=parent
                                 )`
                     }
-                    else if (key == "price") {
+                    else if (obj[key].min >= 0) {
                         return pug`
-                            CurrencyInput(
+                            RangeInput(
                                 key=key,
                                 min=obj[key].min,
                                 max=obj[key].max,
@@ -233,6 +251,10 @@ class App extends Component {
                 containerClassName: "col-full"
             }
         }
+    }
+    editSubRecord = (e, id, key, parent) => {
+        e.preventDefault();
+        console.log(id, key, parent)
     }
     addNewSubfield = (e, key, parent) => {
         e.preventDefault();
@@ -320,7 +342,6 @@ class App extends Component {
 
     updateEntry = e => {
         e.preventDefault();
-        console.log("Before transform", this.state);
 
         const updateRecord = data => {
             let sendData = JSON.stringify(Object.assign({}, data, { id: this.state.settings.currentid }));
@@ -340,33 +361,12 @@ class App extends Component {
         // Transform current state into key/value object for update.
         let newData = transformState(this.state.currentRecord)
         if (newData.extraRecords.length > 0) {
-            newData.extraRecords.forEach((data, idx) => {
-                apiConnector("create", JSON.stringify(data.record), data.type)
-                    .then(res => {
-                        if (res._id) {
-                            this.setState({
-                                currentRecord: Object.assign({}, this.state.currentRecord, { [data.key]: Object.assign({}, this.state.currentRecord[data.key], { newRecord: false, value: res._id }) })
-                            })
-                            this.populateFieldSelect(data.key)
-                            newData.mainRecord[data.key] = { ref: data.type, _id: res._id }
-                            if (idx == newData.extraRecords.length - 1) {
-                                updateRecord(newData.mainRecord);
-                            }
-                        }
-                        else {
-                            this.writeError("ERROR ON SUBFIELD ENTRY: ", data)
-                        }
-
-                    })
-
-            })
+            this.processNewSubfields(newData, updateRecord)
         }
         else {
+            console.log(newData)
             updateRecord(newData.mainRecord)
         }
-
-
-
     }
 
     createNewEntry = e => {
@@ -390,35 +390,38 @@ class App extends Component {
                     else {
                         console.log("ERROR ON CREATE", data)
                     }
-
                 });
         }
         let newData = transformState(this.state.currentRecord)
         if (newData.extraRecords.length > 0) {
-            newData.extraRecords.forEach((data, idx) => {
-                apiConnector("create", JSON.stringify(data.record), data.type)
-                    .then(res => {
-                        console.log(res)
-                        if (res._id) {
-                            newData.mainRecord[data.key] = { ref: data.type, _id: res._id }
-                            this.setState({
-                                currentRecord: Object.assign({}, this.state.currentRecord, { [data.key]: Object.assign({}, this.state.currentRecord[data.key], { newRecord: false, value: res._id }) })
-                            })
-                            if (idx == newData.extraRecords.length - 1) {
-                                createRecord(newData.mainRecord);
-                            }
-                        }
-                        else {
-                            this.writeError("ERROR ON SUBFIELD ENTRY: ", data)
-                        }
-
-                    })
-
-            })
+            this.processNewSubfields(newData, createRecord)
         }
         else {
             createRecord(newData.mainRecord)
         }
+    }
+
+    processNewSubfields = (processRecord, cb) => {
+        processRecord.extraRecords.forEach((data, idx) => {
+            apiConnector("create", JSON.stringify(data.record), data.type)
+                .then(res => {
+                    if (res._id) {
+                        this.populateFieldSelect(data.key)
+                        processRecord.mainRecord[data.key] = { ref: data.type, _id: res._id }
+                        this.setState({
+                            currentRecord: Object.assign({}, this.state.currentRecord, { [data.key]: Object.assign({}, this.state.currentRecord[data.key], { newRecord: false, value: res._id }) })
+                        })
+                        if (idx == processRecord.extraRecords.length - 1) {
+                            cb(processRecord.mainRecord);
+                        }
+                    }
+                    else {
+                        this.writeError("ERROR ON SUBFIELD ENTRY: ", data)
+                    }
+
+                })
+
+        })
     }
 
     editEntry = id => {
@@ -442,28 +445,44 @@ class App extends Component {
     }
 
     chooseEntry = idx => {
+        if (this.state.entries[idx]) {
+            this.setState({
+                settings: {
+                    mode: "edit",
+                    type: this.state.settings.type,
+                    currentid: this.state.entries[idx]._id
+                },
+                entries: [],
+                currentRecord: assignTypes(Schemas()[this.state.settings.type], this.state.entries[idx], this.formFieldTypes)
+            })
+        }
+        else {
+            this.writeError("Failed to find entry.")
+        }
 
-        this.setState({
-            settings: {
-                mode: "edit",
-                type: this.state.settings.type,
-                currentid: this.state.entries[idx]._id
-            },
-            entries: [],
-            currentRecord: assignTypes(Schemas()[this.state.settings.type], this.state.entries[idx], this.formFieldTypes)
-        })
     }
 
     populateFieldSelect = key => {
         apiConnector("read", "{}", key)
             .then(res => {
-
-                this.setState({
-                    selectEntries: Object.assign(
-                        {},
-                        this.state.selectEntries,
-                        { [key]: res })
-                })
+                if (res.length) {
+                    this.setState({
+                        selectEntries: Object.assign(
+                            {},
+                            this.state.selectEntries,
+                            { [key]: res })
+                    })
+                }
+                else {
+                    this.state.currentRecord[key].newRecord = true
+                    this.setState(this.state)
+                }
+                if (this.state.currentRecord[key]) {
+                    var t = res.filter(data=>{return data._id==this.state.currentRecord[key].value});
+                    this.state.currentRecord[key].textValue= t.length < 1 ? "[select a "+key+"]" : res.filter(data=>{return data._id==this.state.currentRecord[key].value})[0].title
+                    this.setState(this.state)
+                }
+                
             })
     }
 
@@ -506,57 +525,49 @@ class App extends Component {
         })
     }
 
-    handleChange = (e, editor) => {
+    handleChange = e => {
 
         let newValue = "ERROR ON UPDATE"
         let name = "NAME NOT DEFINED"
+        e.preventDefault()
 
-        if (typeof e.preventDefault != "function") {
-            console.log(e, editor);
-        }
-        else {
-            e.preventDefault();
+        if (e.target.type === "select-one") {
 
-            if (e.target.type === "select-one") {
-                newValue = e.target.options[e.target.selectedIndex].value;
-                name = e.target.name
-            }
-            else if (e.target.type === "checkbox") {
-                newValue = e.target.checked
-                name = e.target.name
+            // Catch the "create new record" item in the field select drop down. Probably a better place to trigger this in future.
+            if (e.target.options[e.target.selectedIndex].value == "create-new") {
+                this.addNewSubfield(e, e.target.id, e.target.getAttribute("data-parent"))
+                return;
             }
             else {
-                newValue = e.target.value
+                newValue = e.target.options[e.target.selectedIndex].value;
                 name = e.target.name
+                if (e.target.getAttribute("data-parent") != "false") {
+                    this.state.currentRecord[e.target.getAttribute("data-parent")][name].textValue = e.target.options[e.target.selectedIndex].innerHTML
+                }
+                else {
+                    this.state.currentRecord[name].textValue = e.target.options[e.target.selectedIndex].innerHTML
+                }
             }
-        }
-        if (e.target.getAttribute("data-parent") != "false") {
-            this.setState({
-                currentRecord: Object.assign({}, this.state.currentRecord,
-                    {
-                        [e.target.getAttribute("data-parent")]: Object.assign({}, this.state.currentRecord[e.target.getAttribute("data-parent")],
-                            {
-                                [name]: Object.assign({}, this.state.currentRecord[e.target.getAttribute("data-parent")][name],
-                                    {
-                                        value: newValue
-                                    })
-                            })
-                    })
-            });
-        }
-        else {
-            this.setState({
-                currentRecord: Object.assign({}, this.state.currentRecord,
-                    {
-                        [e.target.name]: Object.assign({}, this.state.currentRecord[e.target.name],
-                            {
-                                value: newValue
-                            })
-                    })
-            });
 
         }
+        else if (e.target.type === "checkbox") {
+            newValue = e.target.checked
+            name = e.target.name
+        }
+        else {
+            newValue = e.target.value
+            name = e.target.name
+        }
+
+        if (e.target.getAttribute("data-parent") != "false") {
+            this.state.currentRecord[e.target.getAttribute("data-parent")][name].value = newValue
+        }
+        else {
+            this.state.currentRecord[name].value = newValue
+        }
+        this.setState(this.state);
     }
+
     changeDate = (newValue, label) => {
         // Process date field change
         this.setState({
@@ -579,17 +590,32 @@ class App extends Component {
                 buttons=this.menuButtons("default")
                 selectedType=this.state.settings.type
                 )
-            WeedForm(
-                key='form-main',
-                currentRecord=this.state.currentRecord,
-                createEntry=this.createNewEntry,
-                updateEntry=this.updateEntry,
-                deleteEntry=this.deleteEntry,
-                mode=this.state.settings.mode,
-                msg=this.state.error,
-                type=this.state.settings.type,
-                id=this.state.settings.currentid
+            if this.state.settings.type=="purchase"
+                PurchaseForm(
+                    currentRecord=this.state.currentRecord,
+                    handleChange=this.handleChange,
+                    createEntry=this.createNewEntry,
+                    updateEntry=this.updateEntry,
+                    deleteEntry = this.deleteEntry,
+                    mode = this.state.settings.mode,
+                    msg = this.state.error,
+                    populate = this.populateFieldSelect,
+                    entries = this.state.selectEntries, 
+                    addNewSubfield = this.addNewSubfield, 
+                    editSubRecord = this.editSubRecord
                 )
+            else
+                EditForm(
+                    key='form-main',
+                    currentRecord=this.state.currentRecord,
+                    createEntry=this.createNewEntry,
+                    updateEntry=this.updateEntry,
+                    deleteEntry=this.deleteEntry,
+                    mode=this.state.settings.mode,
+                    msg=this.state.error,
+                    type=this.state.settings.type,
+                    id=this.state.settings.currentid
+                    )
         if this.state.settings.mode=="manager"
             Menu(
                 key="main-nav-bucket",

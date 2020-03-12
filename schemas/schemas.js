@@ -57,14 +57,32 @@ function AppSchemas() {
                 default: Date.now
             }
         },
-        "flower": {
+        "product": {
             title: {
                 type: String,
-                default: "Name of Strain"
+                default: "Product Name"
             },
-            notes:{
+            productType:{
                 type:String,
-                default:"wysiwyg"
+                default:"Flower"
+            },
+            strain:{
+                ref:"strain",
+                type: mongoose.Schema.Types.ObjectId
+            },
+            created: {
+                type: Date,
+                default: Date.now
+            }
+        },
+        "strain":{
+            title: {
+                type:String,
+                default:"Strain Name"
+            },
+            strainType:{
+                type:String,
+                default:"hybrid"
             },
             created: {
                 type: Date,
@@ -157,8 +175,8 @@ function AppSchemas() {
                 ref:"distributor",
                 type: mongoose.Schema.Types.ObjectId
             },
-            flower: {
-                ref: "flower",
+            product: {
+                ref: "product",
                 type: mongoose.Schema.Types.ObjectId
             },
             dispensary: {

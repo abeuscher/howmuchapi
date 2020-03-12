@@ -12,6 +12,7 @@
       .image-bucket {
         flex-basis:30%;
         position:relative;
+        margin-bottom:$gutter-width/2;
         &:after {
           content:'';
           display:block;
@@ -19,13 +20,28 @@
         }
         .delete {
           position:absolute;
-          top:0;
-          right:0;
+          top:-.5em;
+          right:-.5em;
+          height:1em;
+          width:1em;
+          padding:5px;
           z-index:1;
+          border-radius:50%;
+          background:$light-green;
+          line-height:0;
+          display:flex;
+          svg {
+            width:.5em;
+            height:auto;
+             color:$white;
+            text-shadow:3px 3px 5px rgba(0,0,0,.5);
+         
+          }
           &:hover {
+            background:red;
             color:white;
             cursor:pointer;
-          }
+          }             
         }
         .thumb {
           position:absolute;
@@ -72,7 +88,12 @@
       padding: 10px;
       border: 1px dashed #999;
     }
-    
+    label[for="multi"] {
+      cursor:pointer;
+      &:active {
+        font-weight:bold;
+      }
+    }
     /* Loading */
     .loading-wrapper, .loading {
       display: flex;

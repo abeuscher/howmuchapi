@@ -12,9 +12,18 @@ export default class FieldSelect extends Component {
     }
 
     render() {
+        let toggleSelect = false, toggleBackButton = false
+        if (!this.props.newRecord) {
+            toggleSelect = true
+        }
+        if (this.props.entries[this.props.id]) {
+            if (this.props.entries[this.props.id].length>0) {
+                toggleBackButton = true
+            }           
+        }
     return pug`
         label(for=this.props.id,key='label-'+this.props.id)=this.props.label
-        if !this.props.newRecord
+        if toggleSelect
             select(
                 id=this.props.id,
                 key=this.props.id,
@@ -28,15 +37,17 @@ export default class FieldSelect extends Component {
                         option(key=this.props.id+"-option-"+idx,value=entry._id)=entry["title"] 
                 else
                     option(key=this.props.id+"-option-0",value=0)="loading..."
-            button.addNew(id=this.props.id+"-add-one-button",onClick=(e)=>{this.props.addNewSubfield(e,this.props.id,this.props.parent)}) Add New           
+                option(key=this.props.id+"-add-one-button",value="create-new",id=this.props.id+"-add-one-button")="Add New " + this.props.id         
         else
             TextInput(
                 id=this.props.id,
+                key=this.props.id+"-text"
                 handleChange=this.props.handleChange,
                 value=this.props.value,
                 name=this.props.id,
                 parent=this.props.parent)
-            button.addNew(id=this.props.id+"-dont-add-one-button",onClick=(e)=>{this.props.addNewSubfield(e,this.props.id,this.props.parent)}) Pick from list
+            if toggleBackButton
+                button.addNew(id=this.props.id+"-dont-add-one-button",onClick=(e)=>{this.props.addNewSubfield(e,this.props.id,this.props.parent)}) Back to list
         
 `
     }
